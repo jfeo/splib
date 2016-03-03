@@ -1,5 +1,5 @@
-#ifndef SHORintESintPAintHS_EDGE_H_
-#define SHORintESintPAintHS_EDGE_H_
+#ifndef SPLIB_GRAPH_H_
+#define SPLIB_GRAPH_H_
 
 #include <vector>
 #include <tuple>
@@ -27,4 +27,4 @@ public:
 } // namespace shortestpaths
 
 
-#endif
+#endif // GRAPH
