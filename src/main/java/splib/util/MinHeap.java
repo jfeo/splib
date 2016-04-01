@@ -20,7 +20,7 @@ public class MinHeap<E> {
    * @param elements The list of element and key two-tuples, from which to initialize the heap with.
    */
   public MinHeap(ArrayList<Pair<E, Integer>> elements) {
-    this.elements = elements;
+    this.elements = new ArrayList<Pair<E, Integer>>(elements);
     for (int i = (int)Math.floor((double)(elements.size() - 1) / 2.0); i >= 0; i--) {
       this.heapify(i);
     }
