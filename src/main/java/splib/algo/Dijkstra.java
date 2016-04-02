@@ -27,6 +27,7 @@ public class Dijkstra {
     for (SPVertex v : G.getVertices()) {
       Q.insert(v, v.getEstimate());
     }
+
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
       SPVertex u = Q.extractMinimum();
