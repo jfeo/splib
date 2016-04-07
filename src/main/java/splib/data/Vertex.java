@@ -1,5 +1,6 @@
 package splib.data;
 
+import splib.util.IndexKeeper;
 import java.lang.RuntimeException;
 import java.util.ArrayList;
 import splib.util.Pair;
@@ -10,9 +11,10 @@ import java.lang.Comparable;
  * A representation of a vertex in a graph, specifically used in shortest path
  * algorithms.
  */
-public class Vertex {
+public class Vertex implements IndexKeeper {
 
 
+  protected Integer index;
   protected ArrayList<Pair<Vertex, Integer>> adjacency;
 
 
@@ -23,11 +25,20 @@ public class Vertex {
     this.adjacency = new ArrayList<Pair<Vertex, Integer>>();
   }
 
+  /**
+   * Initialize the vertex with an index.
+   * @param index The index of the vertex in its collection.
+   */
+  public Vertex(Integer index) {
+    this.index = index;
+    this.adjacency = new ArrayList<Pair<Vertex, Integer>>();
+  }
+
 
   /**
    * Add an adjacency relation (or edge) from this vertex, to vertex v, with
    * the given weight.
-   * @param v The vertex that is adjacent to this one.
+   * @param vIndex The index of the vertex that is adjacent to this one.
    * @param weight The weight of the edge between the,.
    */
   public void addAdjacency(Vertex v, int weight) {
@@ -51,13 +62,30 @@ public class Vertex {
    * @param v The vertex to which the edge should go.
    * @return The weight of the edge between this vertex and the vertex v.
    */
-  public int getWeight(Vertex v) {
+  public int getWeight(SPVertex v) {
     for (Pair<Vertex, Integer> u : this.adjacency) {
       if (v == u.getItem1()) {
         return u.getItem2();
       }
     }
     return -1;
+  }
+
+  /**
+   * Get the index of this vertex.
+   * @return The index of the vertex.
+   */
+  public Integer getIndex() {
+    return this.index;
+  }
+
+
+  /**
+   * Set the index of this vertex.
+   * @param index The new index of the vertex.
+   */
+  public void setIndex(Integer index) {
+    this.index = index;
   }
 
 

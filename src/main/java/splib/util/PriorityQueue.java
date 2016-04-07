@@ -1,33 +1,45 @@
 package splib.util;
 
 
+import splib.util.IndexKeeper;
 import splib.util.Pair;
-import splib.util.MinHeap;
+import splib.util.Heap;
 import java.util.ArrayList;
 
 
 /**
  * A minimum priority queue.
  */
-public class PriorityQueue<E> extends MinHeap<E> {
+public class PriorityQueue<E extends IndexKeeper> {
 
 
-  public PriorityQueue(ArrayList<Pair<E, Integer>> A) {
-    super(A);
+  protected Heap<E> heap;
+
+
+  public PriorityQueue(Heap<E> heap) {
+    this.heap = heap;
   }
 
-  public PriorityQueue() {
-    super();
+  public PriorityQueue(Heap<E> heap, ArrayList<Pair<E, Integer>> A) {
+    this.heap = heap;
+    for (Pair<E, Integer> a : A) {
+      this.insert(a.getItem1(), a.getItem2());
+    }
+  }
+
+
+  public Heap<E> getHeap() {
+    return this.heap;
   }
 
 
   /**
-   * Find the element with the minimum key.
-   * @return The element with the minimum key.
+   * Find the element at the top of the heap.
+   * @return The element at the top of the queue.
    */
-  public E minimum() {
-    if (this.elements.size() > 0) {
-      return this.elements.get(0).getItem1();
+  public E top() {
+    if (this.heap.getElements().size() > 0) {
+      return this.heap.getElements().get(0).getItem1();
     } else {
       return null;
     }
@@ -40,42 +52,24 @@ public class PriorityQueue<E> extends MinHeap<E> {
    * @param key The key value for the element.
    */
   public void insert(E element, int key) {
-    this.elements.add(new Pair<E, Integer>(element, Integer.MAX_VALUE));
-    this.decreaseKey(this.elements.size() - 1, key);
+    element.setIndex(this.heap.getElements().size());
+    this.heap.getElements().add(new Pair<E, Integer>(element, Integer.MAX_VALUE));
+    this.heap.changeKey(this.heap.getElements().size() - 1, key);
   }
 
-
   /**
-   * Decrease the key to the value of key of the ith element.
-   * @param i The index of the element
-   * @param key The new key value
+   * Extract an element from the queue.
+   * @return The element top element of the heap.
    */
-  public void decreaseKey(int i, int key) {
-    if (key > this.elements.get(i).getItem2()) {
-      return; // new key value is not a decrease TODO: may throw exception?
-    }
-
-    this.elements.set(i, new Pair<E, Integer>(this.elements.get(i).getItem1(), key));
-
-    while (i > 0 && this.elements.get(this.parent(i)).getItem2() > this.elements.get(i).getItem2()) {
-      // Swap i and parent of i
-      this.swap(i, this.parent(i));
-      i = this.parent(i);
-    }
-  }
-
-
-  /**
-   * Extract the minimum element from the queue.
-   * @return The element with the minimum key.
-   */
-  public E extractMinimum() {
-    if (this.elements.size() > 0) {
-      E minimum = this.minimum();
-      this.elements.set(0, this.elements.get(this.elements.size() - 1));
-      this.elements.remove(this.elements.size() - 1);
-      this.heapify(0);
-      return minimum;
+  public E extract() {
+    if (this.heap.getElements().size() > 0) {
+      E top = this.top();
+      top.setIndex(null);
+      this.heap.getElements().set(0, this.heap.getElements().get(this.heap.getElements().size() - 1));
+      this.heap.getElements().get(0).getItem1().setIndex(0);
+      this.heap.getElements().remove(this.heap.getElements().size() - 1);
+      this.heap.heapify(0);
+      return top;
     } else {
       return null;
     }
@@ -87,7 +81,7 @@ public class PriorityQueue<E> extends MinHeap<E> {
    * @return True if the queue is empty, false otherwise.
    */
   public boolean isEmpty() {
-    return this.elements.isEmpty();
+    return this.heap.getElements().isEmpty();
   }
 
 
@@ -97,7 +91,7 @@ public class PriorityQueue<E> extends MinHeap<E> {
    * @return The element at the ith index of the queue.
    */
   public E get(int i) {
-    return this.elements.get(i).getItem1();
+    return this.heap.getElements().get(i).getItem1();
   }
 
 
@@ -107,12 +101,17 @@ public class PriorityQueue<E> extends MinHeap<E> {
    * @return The index of the element, or -1 if no such element exists.
    */
   public int indexOf(E element) {
-    for (int i = 0; i < this.elements.size(); i++) {
-      if (element == this.elements.get(i).getItem1()) {
+    for (int i = 0; i < this.heap.getElements().size(); i++) {
+      if (element == this.heap.getElements().get(i).getItem1()) {
         return i;
       }
     }
     return -1;
+  }
+
+
+  public void changeKey(int i, int key) {
+    this.heap.changeKey(i, key);
   }
 
 

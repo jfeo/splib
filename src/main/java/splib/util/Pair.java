@@ -14,8 +14,7 @@ public class Pair<E, F> {
    * @param item1 The first item.
    * @param item2 The second item.
    */
-  public Pair(E item1, F item2)
-  {
+  public Pair(E item1, F item2) {
     this.item1 = item1;
     this.item2 = item2;
   }

@@ -9,53 +9,70 @@ import splib.util.PriorityQueue;
 import splib.data.Graph;
 import splib.data.SPVertex;
 import splib.data.Vertex;
+import splib.util.IndexKeeper;
+import splib.util.MinBinaryHeap;
 
 
 public class TestPriorityQueue {
 
+  public class StringWrapper implements IndexKeeper {
+    private String s;
+
+    public StringWrapper(String s) {
+      this.s = s;
+    }
+
+    public String get() {
+      return this.s;
+    }
+
+    public void setIndex(Integer i) {}
+    public Integer getIndex() { return 0; }
+  }
+
 
   @Test
   public void test_emptyConstructor() {
-    PriorityQueue<String> Q = new PriorityQueue<String>();
-    Q.insert("Second string", 10);
-    Q.insert("Fifth string", 9999);
-    Q.insert("Third string", 100);
-    Q.insert("Fourth string", 500);
-    Q.insert("First string", 1);
+    PriorityQueue<StringWrapper> Q = new PriorityQueue<StringWrapper>(new MinBinaryHeap());
+    Q.insert(new StringWrapper("Second string"), 10);
+    Q.insert(new StringWrapper("Fifth string"), 9999);
+    Q.insert(new StringWrapper("Third string"), 100);
+    Q.insert(new StringWrapper("Fourth string"), 500);
+    Q.insert(new StringWrapper("First string"), 1);
 
-    String s = Q.extractMinimum();
-    assertEquals("First string", s);
-    s = Q.extractMinimum();
-    assertEquals("Second string", s);
-    s = Q.extractMinimum();
-    assertEquals("Third string", s);
-    s = Q.extractMinimum();
-    assertEquals("Fourth string", s);
-    s = Q.extractMinimum();
-    assertEquals("Fifth string", s);
+    StringWrapper s = Q.extract();
+    assertEquals("First string", s.get());
+    s = Q.extract();
+    assertEquals("Second string", s.get());
+    s = Q.extract();
+    assertEquals("Third string", s.get());
+    s = Q.extract();
+    assertEquals("Fourth string", s.get());
+    s = Q.extract();
+    assertEquals("Fifth string", s.get());
   }
 
 
   @Test
   public void test_arrayConstructor() {
-    ArrayList<Pair<String, Integer>> A = new ArrayList<Pair<String, Integer>>();
-    A.add(new Pair<String, Integer>("Second string", 10));
-    A.add(new Pair<String, Integer>("Fifth string", 9999));
-    A.add(new Pair<String, Integer>("Third string", 100));
-    A.add(new Pair<String, Integer>("Fourth string", 500));
-    A.add(new Pair<String, Integer>("First string", 1));
-    PriorityQueue<String> Q = new PriorityQueue<String>(A);
+    ArrayList<Pair<StringWrapper, Integer>> A = new ArrayList<Pair<StringWrapper, Integer>>();
+    A.add(new Pair<StringWrapper, Integer>(new StringWrapper("Second string"), 10));
+    A.add(new Pair<StringWrapper, Integer>(new StringWrapper("Fifth string"), 9999));
+    A.add(new Pair<StringWrapper, Integer>(new StringWrapper("Third string"), 100));
+    A.add(new Pair<StringWrapper, Integer>(new StringWrapper("Fourth string"), 500));
+    A.add(new Pair<StringWrapper, Integer>(new StringWrapper("First string"), 1));
+    PriorityQueue<StringWrapper> Q = new PriorityQueue<StringWrapper>(new MinBinaryHeap<StringWrapper>(), A);
 
-    String s = Q.extractMinimum();
-    assertEquals("First string", s);
-    s = Q.extractMinimum();
-    assertEquals("Second string", s);
-    s = Q.extractMinimum();
-    assertEquals("Third string", s);
-    s = Q.extractMinimum();
-    assertEquals("Fourth string", s);
-    s = Q.extractMinimum();
-    assertEquals("Fifth string", s);
+    StringWrapper s = Q.extract();
+    assertEquals("First string", s.get());
+    s = Q.extract();
+    assertEquals("Second string", s.get());
+    s = Q.extract();
+    assertEquals("Third string", s.get());
+    s = Q.extract();
+    assertEquals("Fourth string", s.get());
+    s = Q.extract();
+    assertEquals("Fifth string", s.get());
   }
 
 

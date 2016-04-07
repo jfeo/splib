@@ -10,14 +10,14 @@ public class Graph<V extends Vertex> {
    * A simple graph, implemented as an adjacency list.
    */
 
-  public ArrayList<V> vertices;
+  private ArrayList<V> vertices;
+  private int edgeCount;
 
   public Graph() {
     this.vertices = new ArrayList<V>();
   }
 
-  public int addVertex(V v)
-  {
+  public int addVertex(V v) {
     this.vertices.add(v);
     return this.vertices.size() - 1;
   }
@@ -27,10 +27,18 @@ public class Graph<V extends Vertex> {
     V v = this.vertices.get(vIndex);
     u.addAdjacency(v, weight);
     v.addAdjacency(u, weight);
+    this.edgeCount++;
   }
 
-  public ArrayList<V> getVertices()
-  {
+  public ArrayList<V> getVertices() {
     return this.vertices;
+  }
+
+  public int getVertexCount() {
+    return this.vertices.size();
+  }
+
+  public int getEdgeCount() {
+    return this.edgeCount;
   }
 }
