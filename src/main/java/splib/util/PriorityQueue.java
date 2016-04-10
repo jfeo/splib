@@ -16,12 +16,12 @@ public class PriorityQueue<E extends IndexKeeper> {
   protected Heap<E> heap;
 
 
-  public PriorityQueue(Heap<E> heap) {
-    this.heap = heap;
+  public PriorityQueue(Heap<E> h) {
+    this.heap = h;
   }
 
-  public PriorityQueue(Heap<E> heap, ArrayList<Pair<E, Integer>> A) {
-    this.heap = heap;
+  public PriorityQueue(Heap<E> h, ArrayList<Pair<E, Integer>> A) {
+    this.heap = h;
     for (Pair<E, Integer> a : A) {
       this.insert(a.getItem1(), a.getItem2());
     }

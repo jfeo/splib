@@ -22,8 +22,8 @@ public class Dijkstra {
    * @param s The source vertex. Undefined behaviour, if this vertex is not in G.
    * @return The vertices.
    */
-  public static ArrayList<SPVertex> singleSource(Heap<SPVertex> h,
-      Graph<SPVertex> G, SPVertex s) {
+  public static ArrayList<SPVertex> singleSource(
+      Heap<SPVertex> h, Graph<SPVertex> G, SPVertex s) {
     Dijkstra.initializeSingleSource(G, s);
 
     ArrayList<SPVertex> S = new ArrayList<SPVertex>();

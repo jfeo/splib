@@ -71,7 +71,7 @@ public class GraphCreator {
 
     for (int i = 0; i < n; i++) {
       for (int j = i+1; j < n; j++) {
-        if (random.nextFloat() > p) {
+        if (random.nextFloat() < p) {
           G.addEdge(i, j, random.nextInt(9) + 1);
         }
       }

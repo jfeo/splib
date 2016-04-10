@@ -33,7 +33,8 @@ public class TestPriorityQueue {
 
   @Test
   public void test_emptyConstructor() {
-    PriorityQueue<StringWrapper> Q = new PriorityQueue<StringWrapper>(new MinBinaryHeap());
+    MinBinaryHeap<StringWrapper> h = new MinBinaryHeap<>();
+    PriorityQueue<StringWrapper> Q = new PriorityQueue<StringWrapper>(h);
     Q.insert(new StringWrapper("Second string"), 10);
     Q.insert(new StringWrapper("Fifth string"), 9999);
     Q.insert(new StringWrapper("Third string"), 100);
@@ -61,7 +62,7 @@ public class TestPriorityQueue {
     A.add(new Pair<StringWrapper, Integer>(new StringWrapper("Third string"), 100));
     A.add(new Pair<StringWrapper, Integer>(new StringWrapper("Fourth string"), 500));
     A.add(new Pair<StringWrapper, Integer>(new StringWrapper("First string"), 1));
-    PriorityQueue<StringWrapper> Q = new PriorityQueue<StringWrapper>(new MinBinaryHeap<StringWrapper>(), A);
+    PriorityQueue<StringWrapper> Q = new PriorityQueue<StringWrapper>(new MinBinaryHeap(A));
 
     StringWrapper s = Q.extract();
     assertEquals("First string", s.get());
