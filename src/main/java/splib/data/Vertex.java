@@ -47,6 +47,21 @@ public class Vertex implements IndexKeeper {
 
 
   /**
+   * Remove the adjacency relation (or edge) from this vertex, to vertex v.
+   * @param v The vertex whose relation to this vertex is to be removed.
+   */
+  public void removeAdjacency(Vertex v) {
+    for (int i = 0; i < this.adjacency.size(); i++) {
+      Pair<Vertex, Integer> u = this.adjacency.get(i);
+      if (u.getItem1() == v) {
+        this.adjacency.remove(i);
+        i--;
+      }
+    }
+  }
+
+
+  /**
    * Get the list of vertices adjacent to this one, along with the weight of
    * their respective edges.
    * @return A list of two-tuples, containing the target vertex and weight of
