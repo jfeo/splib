@@ -80,7 +80,7 @@ public class MinThreeHeap<E extends IndexKeeper> extends Heap<E> {
 
     this.elements.set(i, new Pair<E, Integer>(this.elements.get(i).getItem1(), key));
 
-    while (i != 0 && key < this.parent(i)) {
+    while (i != 0 && key < this.elements.get(this.parent(i)).getItem2()) {
       this.swap(i, this.parent(i));
       i = this.parent(i);
     }
