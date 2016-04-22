@@ -9,7 +9,7 @@ public class SPVertex extends Vertex {
   protected SPVertex pred;
   protected int estimate;
 
-  public SPVertex(SPVertex prev, int estimate) {
+  public SPVertex(SPVertex pred, int estimate) {
     super();
     this.pred = pred;
     this.estimate = estimate;
