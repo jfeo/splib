@@ -28,9 +28,8 @@ public class Dijkstra {
 
     ArrayList<SPVertex> S = new ArrayList<SPVertex>();
     PriorityQueue<SPVertex> Q = new PriorityQueue<SPVertex>(h);
-    for (SPVertex v : G.getVertices()) {
-      Q.insert(v, v.getEstimate());
-    }
+
+    Q.insert(s, s.getEstimate());
 
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
@@ -72,6 +71,7 @@ public class Dijkstra {
     if (v.getEstimate() > newEstimate) {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);
+      Q.insert(v, newEstimate);
       if (v.getIndex() != null) {
         Q.changeKey(v.getIndex(), newEstimate);
       }
