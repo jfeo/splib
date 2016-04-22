@@ -34,13 +34,13 @@ public class MinFourHeap<E extends IndexKeeper> extends Heap<E> {
       }
 
       if (ml < this.elements.size()
-          && this.elements.get(m).getItem2()
+          && this.elements.get(ml).getItem2()
           <  this.elements.get(least).getItem2()) {
         least = ml;
       }
 
       if (mr < this.elements.size()
-          && this.elements.get(m).getItem2()
+          && this.elements.get(mr).getItem2()
           <  this.elements.get(least).getItem2()) {
         least = mr;
       }
@@ -59,6 +59,8 @@ public class MinFourHeap<E extends IndexKeeper> extends Heap<E> {
       }
     }
   }
+
+
 
   protected void swap(int i, int j) {
     if (i == j) {
