@@ -35,42 +35,55 @@ public class BidirectionalDijkstra {
     Qs.insert(s, s.getEstimate());
     Qt.insert(t, t.getSuccessorEstimate());
 
+    // Continue, while the minimum elements of the two queues, are not identical
     while (Qs.top() != Qt.top()) {
       BDDVertex u = Qs.extract();
       Ss.add(u);
+
       for (Pair<Vertex, Integer> v : u.getAdjacency()) {
         Dijkstra.relax(Qs, u, (BDDVertex)v.getItem1(), v.getItem2());
       }
+
       if (u == t){
-        return Qs.top().getEstimate();
+        return u.getEstimate();
+      }
+      if (u == Qt.top()) {
+        return u.getEstimate() + Qt.top().getSuccessorEstimate();
       }
 
       u = Qt.extract();
       St.add(u);
+
       for (Pair<Vertex, Integer> v : u.getAdjacency()) {
         BidirectionalDijkstra.relax(Qt, u, (BDDVertex)v.getItem1(), v.getItem2());
       }
 
-      if (u == s){
-        return Qt.top().getSuccessorEstimate();
+      if (u == s) {
+        return u.getSuccessorEstimate();
+      }
+      if (u == Qs.top()) {
+        return u.getSuccessorEstimate() + Qs.top().getEstimate();
       }
     }
+
+
+    return Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
 
     // Check if the shortest path found, is in the best shortest path
-    int bestPath = Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
-    for (BDDVertex v : Ss){
-      if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
-        bestPath = v.getEstimate() + v.getSuccessorEstimate();
-      }
-    }
+    // int bestPath = Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
+    // for (BDDVertex v : Ss){
+    //   if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
+    //     bestPath = v.getEstimate() + v.getSuccessorEstimate();
+    //   }
+    // }
 
-    for (BDDVertex v : St){
-      if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
-        bestPath = v.getEstimate() + v.getSuccessorEstimate();
-      }
-    }
+    // for (BDDVertex v : St){
+    //   if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
+    //     bestPath = v.getEstimate() + v.getSuccessorEstimate();
+    //   }
+    // }
 
-    return bestPath;
+    // return bestPath;
   }
 
 
@@ -98,12 +111,10 @@ public class BidirectionalDijkstra {
   public static void relax(PriorityQueue<BDDVertex> Q, BDDVertex u, BDDVertex v, int weight) {
     int newEstimate = u.getSuccessorEstimate() + weight;
     if (v.getSuccessorEstimate() > newEstimate) {
-      v.setPredecessor(u);
-      v.setEstimate(newEstimate);
+      v.setSuccessor(u);
+      v.setSuccessorEstimate(newEstimate);
       Q.insert(v, newEstimate);
-      if (v.getIndex() != null) {
-        Q.changeKey(v.getIndex(), newEstimate);
-      }
+      Q.changeKey(v, newEstimate);
     }
   }
 
