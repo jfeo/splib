@@ -57,11 +57,16 @@ public class ThorupZwick {
     }
 
     for (int i = k - 1; i >= 0; i--) {
+
       // Compute witnesses
+      // Insert new source vertex
+      int sIndex = this.G.addVertex(new TZSPVertex());
+      for (TZSPVertex w = this.A.get(i).iterator().next(); this.A.get(i).iterator().hasNext();) {
+
+      }
+
       for (TZSPVertex v : this.G.getVertices()) {
-        this.singleSource(v, i);
         // compute d(A_i, v) and find p_i(v) in A_i such that d(p_i(v), v) = d(A_i, v)
-        // if d(A_i, v) = d(A_i+1, v) then p_i(v) := p_i+1(v)
         Integer witnessWeight = Integer.MAX_VALUE;
         TZSPVertex witness = null;
         for (TZSPVertex w = this.A.get(i).iterator().next(); this.A.get(i).iterator().hasNext();) {
@@ -73,8 +78,8 @@ public class ThorupZwick {
       }
 
       // Compute clusters
-      HashSet<TZSPVertex> tmp = (HashSet<TZSPVertex>)A.get(0).clone();
-      tmp.removeAll(this.A.get(1));
+      HashSet<TZSPVertex> tmp = (HashSet<TZSPVertex>)A.get(i).clone();
+      tmp.removeAll(this.A.get(i+1));
       for (TZSPVertex w = tmp.iterator().next(); tmp.iterator().hasNext();) {
         this.singleSource(w, i);
         // C(w) = { v in V | d(w, v) < d(A_i+1, v) }
@@ -164,9 +169,7 @@ public class ThorupZwick {
     if (v.getWitness(i+1).getItem2() > newEstimate) {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);
-      if (v.getIndex() != null) {
-        Q.changeKey(v.getIndex(), newEstimate);
-      }
+      Q.changeKey(v, newEstimate);
     }
   }
 

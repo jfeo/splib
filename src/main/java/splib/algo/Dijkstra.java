@@ -72,9 +72,7 @@ public class Dijkstra {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);
       Q.insert(v, newEstimate);
-      if (v.getIndex() != null) {
-        Q.changeKey(v.getIndex(), newEstimate);
-      }
+      Q.changeKey(v, newEstimate);
     }
   }
 }

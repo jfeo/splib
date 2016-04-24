@@ -9,14 +9,14 @@ import java.lang.Math;
 /**
  * A minimum binary heap, keyed with integers, holding elements of type E.
  */
-public class MinBinaryHeap<E extends IndexKeeper> extends Heap<E> {
+public class MinBinaryHeap<E> extends Heap<E> {
 
 
-//   /**
-//    * Initialize a minimum heap with an array of comparable elements.
-//    * @param elements The list of element and key two-tuples, from which to
-//    * initialize the heap with.
-//    */
+  /**
+   * Initialize a minimum heap with an array of comparable elements.
+   * @param elements The list of element and key two-tuples, from which to
+   * initialize the heap with.
+   */
   public MinBinaryHeap(ArrayList<Pair<E, Integer>> elements) {
     this.elements = new ArrayList<Pair<E, Integer>>(elements);
     for (int i = (int)Math.floor((double)(elements.size() - 1) / 2.0); i >= 0;
@@ -26,9 +26,9 @@ public class MinBinaryHeap<E extends IndexKeeper> extends Heap<E> {
   }
 
 
-//   /**
-//    * Initialize an empty minimum heap
-//    */
+  /**
+   * Initialize an empty minimum heap
+   */
   public MinBinaryHeap() {
     this(new ArrayList<Pair<E, Integer>>());
   }
@@ -60,8 +60,8 @@ public class MinBinaryHeap<E extends IndexKeeper> extends Heap<E> {
     this.elements.set(i, this.elements.get(j));
     this.elements.set(j, tmp);
 
-    this.elements.get(i).getItem1().setIndex(i);
-    this.elements.get(j).getItem1().setIndex(j);
+    this.indexMap.put(this.elements.get(i).getItem1(), i);
+    this.indexMap.put(this.elements.get(j).getItem1(), j);
   }
 
 
@@ -121,18 +121,14 @@ public class MinBinaryHeap<E extends IndexKeeper> extends Heap<E> {
     }
   }
 
+
   /**
    * Get the index of the first occurence of the given element.
    * @param element The element to find the index of.
    * @return The index of the element, or -1 if no such element exists.
    */
   public int indexOf(E element) {
-    for (int i = 0; i < this.elements.size(); i++) {
-      if (element == this.elements.get(i)) {
-        return i;
-      }
-    }
-    return -1;
+    return this.indexMap.get(element);
   }
 
 

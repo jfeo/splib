@@ -10,7 +10,7 @@ import java.util.ArrayList;
 /**
  * A minimum priority queue.
  */
-public class PriorityQueue<E extends IndexKeeper> {
+public class PriorityQueue<E> {
 
 
   protected Heap<E> heap;
@@ -52,9 +52,9 @@ public class PriorityQueue<E extends IndexKeeper> {
    * @param key The key value for the element.
    */
   public void insert(E element, int key) {
-    element.setIndex(this.heap.getElements().size());
-    this.heap.getElements().add(new Pair<E, Integer>(element, Integer.MAX_VALUE));
-    this.heap.changeKey(this.heap.getElements().size() - 1, key);
+    this.heap.getElements().add(new Pair<E, Integer>(element, key));
+    this.heap.getIndexMap().put(element, this.heap.getElements().size() - 1);
+    this.heap.changeKey(element, key);
   }
 
   /**
@@ -64,9 +64,9 @@ public class PriorityQueue<E extends IndexKeeper> {
   public E extract() {
     if (this.heap.getElements().size() > 0) {
       E top = this.top();
-      top.setIndex(null);
+      this.heap.getIndexMap().remove(top);
       this.heap.getElements().set(0, this.heap.getElements().get(this.heap.getElements().size() - 1));
-      this.heap.getElements().get(0).getItem1().setIndex(0);
+      this.heap.getIndexMap().put(this.heap.getElements().get(0).getItem1(), 0);
       this.heap.getElements().remove(this.heap.getElements().size() - 1);
       this.heap.heapify(0);
       return top;
@@ -101,17 +101,12 @@ public class PriorityQueue<E extends IndexKeeper> {
    * @return The index of the element, or -1 if no such element exists.
    */
   public int indexOf(E element) {
-    for (int i = 0; i < this.heap.getElements().size(); i++) {
-      if (element == this.heap.getElements().get(i).getItem1()) {
-        return i;
-      }
-    }
-    return -1;
+    return this.heap.getIndexMap().get(element);
   }
 
 
-  public void changeKey(int i, int key) {
-    this.heap.changeKey(i, key);
+  public void changeKey(E elem, int key) {
+    this.heap.changeKey(this.indexOf(elem), key);
   }
 
 

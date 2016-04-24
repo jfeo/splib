@@ -3,6 +3,7 @@ package splib.data;
 import splib.util.IndexKeeper;
 import java.lang.RuntimeException;
 import java.util.ArrayList;
+import java.util.Collection;
 import splib.util.Pair;
 import java.lang.Comparable;
 
@@ -11,10 +12,10 @@ import java.lang.Comparable;
  * A representation of a vertex in a graph, specifically used in shortest path
  * algorithms.
  */
-public class Vertex implements IndexKeeper {
+public class Vertex {
 
 
-  protected Integer index;
+  // protected Integer index;
   protected ArrayList<Pair<Vertex, Integer>> adjacency;
 
 
@@ -30,7 +31,7 @@ public class Vertex implements IndexKeeper {
    * @param index The index of the vertex in its collection.
    */
   public Vertex(Integer index) {
-    this.index = index;
+    // this.index = index;
     this.adjacency = new ArrayList<Pair<Vertex, Integer>>();
   }
 
@@ -90,18 +91,18 @@ public class Vertex implements IndexKeeper {
    * Get the index of this vertex.
    * @return The index of the vertex.
    */
-  public Integer getIndex() {
-    return this.index;
-  }
+  // public Integer getIndex() {
+  //   return this.index;
+  // }
 
 
   /**
    * Set the index of this vertex.
    * @param index The new index of the vertex.
    */
-  public void setIndex(Integer index) {
-    this.index = index;
-  }
+  // public void setIndex(Integer index) {
+  //   this.index = index;
+  // }
 
 
   /**

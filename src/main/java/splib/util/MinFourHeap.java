@@ -9,7 +9,7 @@ import java.lang.Math;
 /**
  * A minimum four-heap, keyed with integers, holding elements of type E.
  */
-public class MinFourHeap<E extends IndexKeeper> extends Heap<E> {
+public class MinFourHeap<E> extends Heap<E> {
 
   /**
    * Maintain the heap property on the given subtree rooted at the ith element.
@@ -70,8 +70,8 @@ public class MinFourHeap<E extends IndexKeeper> extends Heap<E> {
     this.elements.set(i, this.elements.get(j));
     this.elements.set(j, tmp);
 
-    this.elements.get(i).getItem1().setIndex(i);
-    this.elements.get(j).getItem1().setIndex(j);
+    this.indexMap.put(this.elements.get(i).getItem1(), i);
+    this.indexMap.put(this.elements.get(j).getItem1(), j);
   }
 
 
