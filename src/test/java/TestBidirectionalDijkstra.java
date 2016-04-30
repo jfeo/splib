@@ -15,7 +15,7 @@ public class TestBidirectionalDijkstra {
 
   @Test
   public void test_singlePair() {
-    Graph G = new Graph<BDDVertex>();
+    Graph<BDDVertex> G = new Graph<BDDVertex>();
 
     BDDVertex v1 = new BDDVertex();
     G.addVertex(v1);
@@ -28,27 +28,42 @@ public class TestBidirectionalDijkstra {
     BDDVertex v5 = new BDDVertex();
     G.addVertex(v5);
 
-    G.addEdge(0, 1, 3);
-    G.addEdge(0, 4, 10);
-    G.addEdge(1, 4, 5);
-    G.addEdge(1, 3, 4);
-    G.addEdge(1, 2, 1);
-    G.addEdge(2, 3, 2);
-    G.addEdge(3, 4, 1);
+    G.addEdge(0, 1, 3.0f);
+    G.addEdge(0, 4, 10.0f);
+    G.addEdge(1, 4, 5.0f);
+    G.addEdge(1, 3, 4.0f);
+    G.addEdge(1, 2, 1.0f);
+    G.addEdge(2, 3, 2.0f);
+    G.addEdge(3, 4, 1.0f);
 
     int length;
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap(),
-        new MinBinaryHeap(), G, v1, v2);
+    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(),
+        new MinBinaryHeap<BDDVertex>(), G, v1, v2);
     assertEquals(3, length);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap(),
-        new MinBinaryHeap(), G, v1, v4);
+    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(),
+        new MinBinaryHeap<BDDVertex>(), G, v1, v4);
+    assertEquals(6, length);
+
+    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(),
+        new MinBinaryHeap<BDDVertex>(), G, v1, v5);
     assertEquals(7, length);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap(),
-        new MinBinaryHeap(), G, v1, v5);
-    assertEquals(8, length);
+    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(),
+        new MinBinaryHeap<BDDVertex>(), G, v3, v5);
+    assertEquals(3, length);
 
+    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(),
+        new MinBinaryHeap<BDDVertex>(), G, v2, v4);
+    assertEquals(3, length);
+
+    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(),
+        new MinBinaryHeap<BDDVertex>(), G, v5, v2);
+    assertEquals(4, length);
+
+    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(),
+        new MinBinaryHeap<BDDVertex>(), G, v4, v5);
+    assertEquals(1, length);
   }
 
 }
