@@ -24,12 +24,12 @@ public class Graph<V extends Vertex> {
 
   public void removeVertex(V v) {
     this.vertices.remove(v);
-    for (Pair<Vertex, Integer> u : v.getAdjacency()) {
+    for (Pair<Vertex, Double> u : v.getAdjacency()) {
       u.getItem1().removeAdjacency(v);
     }
   }
 
-  public void addEdge(int uIndex, int vIndex, int weight) {
+  public void addEdge(int uIndex, int vIndex, double weight) {
     V u = this.vertices.get(uIndex);
     V v = this.vertices.get(vIndex);
     u.addAdjacency(v, weight);

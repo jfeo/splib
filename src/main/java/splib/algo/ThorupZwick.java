@@ -67,7 +67,7 @@ public class ThorupZwick {
 
       for (TZSPVertex v : this.G.getVertices()) {
         // compute d(A_i, v) and find p_i(v) in A_i such that d(p_i(v), v) = d(A_i, v)
-        Integer witnessWeight = Integer.MAX_VALUE;
+        double witnessWeight = Double.MAX_VALUE;
         TZSPVertex witness = null;
         for (TZSPVertex w = this.A.get(i).iterator().next(); this.A.get(i).iterator().hasNext();) {
           if (w.getEstimate() < witness.getEstimate()) {
@@ -116,7 +116,7 @@ public class ThorupZwick {
    * @param u The vertex on one end of the path.
    * @param v The vertex on the other end of the path.
    */
-  public Integer query(TZSPVertex u, TZSPVertex v) {
+  public Double query(TZSPVertex u, TZSPVertex v) {
     TZSPVertex w = u;
     int i = 0;
 
@@ -128,7 +128,7 @@ public class ThorupZwick {
       w = u.getWitness(i).getItem1();
     }
 
-    return 0;
+    return 0.0;
   }
 
 
@@ -143,13 +143,13 @@ public class ThorupZwick {
     ArrayList<TZSPVertex> S = new ArrayList<TZSPVertex>();
     PriorityQueue<TZSPVertex> Q = new PriorityQueue<TZSPVertex>(this.h);
     for (TZSPVertex v : this.G.getVertices()) {
-      Q.insert(v, v.getEstimate());
+      Q.insert(v);
     }
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
       TZSPVertex u = Q.extract();
       S.add(u);
-      for (Pair<Vertex, Integer> v : u.getAdjacency()) {
+      for (Pair<Vertex, Double> v : u.getAdjacency()) {
         this.relax(Q, u, (TZSPVertex)v.getItem1(), v.getItem2(), i);
       }
     }
@@ -164,12 +164,12 @@ public class ThorupZwick {
    * @param v The second vertex.
    * @param weight The weight of the edge between the first and the second vertex.
    */
-  private void relax(PriorityQueue Q, TZSPVertex u, TZSPVertex v, int weight, int i) {
-    int newEstimate = u.getEstimate() + weight;
+  private void relax(PriorityQueue Q, TZSPVertex u, TZSPVertex v, double weight, int i) {
+    double newEstimate = u.getEstimate() + weight;
     if (v.getWitness(i+1).getItem2() > newEstimate) {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);
-      Q.changeKey(v, newEstimate);
+      Q.changeKey(v);
     }
   }
 
@@ -183,7 +183,7 @@ public class ThorupZwick {
    */
   private void initializeSingleSource(TZSPVertex s) {
     for (TZSPVertex v : this.G.getVertices()) {
-      v.setEstimate(Integer.MAX_VALUE);
+      v.setEstimate(Double.MAX_VALUE);
       v.setPredecessor(null);
     }
     s.setEstimate(0);

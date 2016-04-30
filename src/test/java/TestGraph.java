@@ -11,6 +11,8 @@ import splib.data.Vertex;
 
 public class TestGraph {
 
+  private static double DELTA = 1e-15;
+
 
   @Test
   public void test_addVertex() {
@@ -36,54 +38,54 @@ public class TestGraph {
 
     String addEdgeError = "Failure - The edge is not as expected.";
     String getWeightError = "Failure - The weight is not as expected.";
-    G.addEdge(0, 1, 1);
+    G.addEdge(0, 1, 1.0);
     Vertex v = (Vertex)G.getVertices().get(0);
-    Pair<Vertex, Integer> u = v.getAdjacency().get(0);
+    Pair<Vertex, Double> u = v.getAdjacency().get(0);
     Vertex w = (Vertex)G.getVertices().get(1);
     assertEquals(addEdgeError, u.getItem1(), w);
-    assertSame(getWeightError, u.getItem2(), 1);
+    assertEquals(getWeightError, u.getItem2(), 1.0, DELTA);
 
-    G.addEdge(0, 4, 2);
+    G.addEdge(0, 4, 2.0);
     v = (Vertex)G.getVertices().get(0);
     u = v.getAdjacency().get(1);
     w = (Vertex)G.getVertices().get(4);
     assertEquals(addEdgeError, u.getItem1(), w);
-    assertSame(getWeightError, u.getItem2(), 2);
+    assertEquals(getWeightError, u.getItem2(), 2.0, DELTA);
 
-    G.addEdge(1, 4, 3);
+    G.addEdge(1, 4, 3.0);
     v = (Vertex)G.getVertices().get(1);
     u = v.getAdjacency().get(1);
     w = (Vertex)G.getVertices().get(4);
     assertEquals(addEdgeError, u.getItem1(), w);
-    assertSame(getWeightError, u.getItem2(), 3);
+    assertEquals(getWeightError, u.getItem2(), 3.0, DELTA);
 
-    G.addEdge(1, 3, 4);
+    G.addEdge(1, 3, 4.0);
     v = (Vertex)G.getVertices().get(1);
     u = v.getAdjacency().get(2);
     w = (Vertex)G.getVertices().get(3);
     assertEquals(addEdgeError, u.getItem1(), w);
-    assertSame(getWeightError, u.getItem2(), 4);
+    assertEquals(getWeightError, u.getItem2(), 4.0, DELTA);
 
-    G.addEdge(1, 2, 5);
+    G.addEdge(1, 2, 5.0);
     v = (Vertex)G.getVertices().get(1);
     u = v.getAdjacency().get(3);
     w = (Vertex)G.getVertices().get(2);
     assertEquals(addEdgeError, u.getItem1(), w);
-    assertSame(getWeightError, u.getItem2(), 5);
+    assertEquals(getWeightError, u.getItem2(), 5.0, DELTA);
 
-    G.addEdge(2, 3, 6);
+    G.addEdge(2, 3, 6.0);
     v = (Vertex)G.getVertices().get(2);
     u = v.getAdjacency().get(1);
     w = (Vertex)G.getVertices().get(3);
     assertEquals(addEdgeError, u.getItem1(), w);
-    assertSame(getWeightError, u.getItem2(), 6);
+    assertEquals(getWeightError, u.getItem2(), 6.0, DELTA);
 
-    G.addEdge(3, 4, 7);
+    G.addEdge(3, 4, 7.0);
     v = (Vertex)G.getVertices().get(3);
     u = v.getAdjacency().get(2);
     w = (Vertex)G.getVertices().get(4);
     assertEquals(addEdgeError, u.getItem1(), w);
-    assertSame(getWeightError, u.getItem2(), 7);
+    assertEquals(getWeightError, u.getItem2(), 7.0, DELTA);
   }
 
 

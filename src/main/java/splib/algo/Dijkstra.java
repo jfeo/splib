@@ -29,13 +29,13 @@ public class Dijkstra {
     ArrayList<SPVertex> S = new ArrayList<SPVertex>();
     PriorityQueue<SPVertex> Q = new PriorityQueue<SPVertex>(h);
 
-    Q.insert(s, s.getEstimate());
+    Q.insert(s);
 
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
       SPVertex u = Q.extract();
       S.add(u);
-      for (Pair<Vertex, Integer> v : u.getAdjacency()) {
+      for (Pair<Vertex, Double> v : u.getAdjacency()) {
         Dijkstra.relax(Q, u, (SPVertex)v.getItem1(), v.getItem2());
       }
     }
@@ -52,7 +52,7 @@ public class Dijkstra {
    */
   public static void initializeSingleSource(Graph<SPVertex> G, SPVertex s) {
     for (SPVertex v : G.getVertices()) {
-      v.setEstimate(Integer.MAX_VALUE);
+      v.setEstimate(Double.MAX_VALUE);
       v.setPredecessor(null);
     }
     s.setEstimate(0);
@@ -66,13 +66,12 @@ public class Dijkstra {
    * @param v The second vertex.
    * @param weight The weight of the edge between the first and the second vertex.
    */
-  public static void relax(PriorityQueue Q, SPVertex u, SPVertex v, int weight) {
-    int newEstimate = u.getEstimate() + weight;
+  public static void relax(PriorityQueue Q, SPVertex u, SPVertex v, double weight) {
+     double newEstimate = u.getEstimate() + weight;
     if (v.getEstimate() > newEstimate) {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);
-      Q.insert(v, newEstimate);
-      Q.changeKey(v, newEstimate);
+      Q.insert(v);
     }
   }
 }

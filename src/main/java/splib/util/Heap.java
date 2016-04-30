@@ -1,9 +1,9 @@
 package splib.util;
 
-import splib.util.IndexKeeper;
 import splib.util.Pair;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.lang.Math;
 
 
@@ -11,20 +11,23 @@ public abstract class Heap<E> {
 
 
   protected HashMap<E, Integer> indexMap;
-  protected ArrayList<Pair<E, Integer>> elements;
+  protected ArrayList<E> elements;
+  protected Comparator<E> comparator;
 
 
-  Heap() {
-    this.elements = new ArrayList<Pair<E, Integer>>();
+  Heap(Comparator<E> c) {
+    this.comparator = c;
+    this.elements = new ArrayList<E>();
     this.indexMap = new HashMap<E, Integer>();
   }
 
 
-  Heap(ArrayList<Pair<E, Integer>> elements) {
-    this.elements = new ArrayList<Pair<E, Integer>>(elements);
+  Heap(Comparator<E> c, ArrayList<E> elements) {
+    this.comparator = c;
+    this.elements = new ArrayList<E>(elements);
     this.indexMap = new HashMap<E, Integer>();
     for (int i = 0; i < elements.size(); i++) {
-      this.indexMap.put(this.elements.get(i).getItem1(), i);
+      this.indexMap.put(this.elements.get(i), i);
     }
     for (int i = (int)Math.floor((double)(elements.size() - 1) / 2.0); i >= 0;
         i--) {
@@ -33,7 +36,7 @@ public abstract class Heap<E> {
   }
 
 
-  public ArrayList<Pair<E, Integer>> getElements() {
+  public ArrayList<E> getElements() {
     return this.elements;
   }
 
@@ -43,10 +46,14 @@ public abstract class Heap<E> {
   }
 
   abstract void heapify(int i);
-  abstract void changeKey(int i, int key);
+  abstract void changeKey(int i);
 
-  void changeKey(E elem, int key) {
-    this.changeKey(this.indexMap.get(elem), key);
+  void changeKey(E elem) {
+    this.changeKey(this.indexMap.get(elem));
+  }
+
+  public int compare(E e, E f) {
+    return this.comparator.compare(e, f);
   }
 
 }

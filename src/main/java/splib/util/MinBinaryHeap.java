@@ -3,6 +3,7 @@ package splib.util;
 import splib.util.Heap;
 import splib.util.Pair;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.lang.Math;
 
 
@@ -17,38 +18,16 @@ public class MinBinaryHeap<E> extends Heap<E> {
    * @param elements The list of element and key two-tuples, from which to
    * initialize the heap with.
    */
-  public MinBinaryHeap(ArrayList<Pair<E, Integer>> elements) {
-    this.elements = new ArrayList<Pair<E, Integer>>(elements);
-    for (int i = (int)Math.floor((double)(elements.size() - 1) / 2.0); i >= 0;
-        i--) {
-      this.heapify(i);
-    }
+  public MinBinaryHeap(Comparator<E> c, ArrayList<E> elements) {
+    super(c, elements);
   }
 
 
   /**
    * Initialize an empty minimum heap
    */
-  public MinBinaryHeap() {
-    this(new ArrayList<Pair<E, Integer>>());
-  }
-
-
-  /**
-   * Print the array formatted.
-   */
-  public void printArray() {
-    System.out.print("{");
-    for (int i = 0; i < this.elements.size(); i++) {
-      System.out.print(Integer.toString(i) + ": ");
-      Pair<E, Integer> e = this.elements.get(i);
-      System.out.print("(key: "+ Integer.toString(e.getItem2())+", elem: "
-          +e.getItem1().toString()+")");
-      if (i < this.elements.size() - 1) {
-        System.out.print(", ");
-      }
-    }
-    System.out.println("}");
+  public MinBinaryHeap(Comparator<E> c) {
+    super(c);
   }
 
 
@@ -56,12 +35,12 @@ public class MinBinaryHeap<E> extends Heap<E> {
     if (i == j) {
       return;
     }
-    Pair<E, Integer> tmp = this.elements.get(i);
+    E tmp = this.elements.get(i);
     this.elements.set(i, this.elements.get(j));
     this.elements.set(j, tmp);
 
-    this.indexMap.put(this.elements.get(i).getItem1(), i);
-    this.indexMap.put(this.elements.get(j).getItem1(), j);
+    this.indexMap.put(this.elements.get(i), i);
+    this.indexMap.put(this.elements.get(j), j);
   }
 
 
@@ -78,16 +57,16 @@ public class MinBinaryHeap<E> extends Heap<E> {
       int least = 0;
 
       if (l < this.elements.size()
-          && this.elements.get(l).getItem2()
-          <  this.elements.get(i).getItem2()) {
+          &&  this.comparator.compare(this.elements.get(l),
+          this.elements.get(i)) < 0) {
         least = l;
       } else {
         least = i;
       }
 
       if (r < this.elements.size()
-          && this.elements.get(r).getItem2()
-          <  this.elements.get(least).getItem2()) {
+          &&  this.comparator.compare(this.elements.get(r),
+          this.elements.get(least)) < 0) {
         least = r;
       }
 
@@ -108,14 +87,9 @@ public class MinBinaryHeap<E> extends Heap<E> {
    * @param key The new key value
    */
   @Override
-  public void changeKey(int i, int key) {
-    if (key > this.elements.get(i).getItem2()) {
-      return;
-    }
-
-    this.elements.set(i, new Pair<E, Integer>(this.elements.get(i).getItem1(), key));
-
-    while (i != 0 && key < this.elements.get(this.parent(i)).getItem2()) {
+  public void changeKey(int i) {
+    while (i != 0 &&  this.comparator.compare(this.elements.get(i),
+        this.elements.get(this.parent(i))) < 0) {
       this.swap(i, this.parent(i));
       i = this.parent(i);
     }

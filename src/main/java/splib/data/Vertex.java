@@ -1,6 +1,5 @@
 package splib.data;
 
-import splib.util.IndexKeeper;
 import java.lang.RuntimeException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,23 +15,14 @@ public class Vertex {
 
 
   // protected Integer index;
-  protected ArrayList<Pair<Vertex, Integer>> adjacency;
+  protected ArrayList<Pair<Vertex, Double>> adjacency;
 
 
   /**
    * Initialize the vertex.
    */
   public Vertex() {
-    this.adjacency = new ArrayList<Pair<Vertex, Integer>>();
-  }
-
-  /**
-   * Initialize the vertex with an index.
-   * @param index The index of the vertex in its collection.
-   */
-  public Vertex(Integer index) {
-    // this.index = index;
-    this.adjacency = new ArrayList<Pair<Vertex, Integer>>();
+    this.adjacency = new ArrayList<Pair<Vertex, Double>>();
   }
 
 
@@ -42,8 +32,8 @@ public class Vertex {
    * @param vIndex The index of the vertex that is adjacent to this one.
    * @param weight The weight of the edge between the,.
    */
-  public void addAdjacency(Vertex v, int weight) {
-    this.adjacency.add(new Pair<Vertex, Integer>(v, weight));
+  public void addAdjacency(Vertex v, Double weight) {
+    this.adjacency.add(new Pair<Vertex, Double>(v, weight));
   }
 
 
@@ -53,7 +43,7 @@ public class Vertex {
    */
   public void removeAdjacency(Vertex v) {
     for (int i = 0; i < this.adjacency.size(); i++) {
-      Pair<Vertex, Integer> u = this.adjacency.get(i);
+      Pair<Vertex, Double> u = this.adjacency.get(i);
       if (u.getItem1() == v) {
         this.adjacency.remove(i);
         i--;
@@ -68,7 +58,7 @@ public class Vertex {
    * @return A list of two-tuples, containing the target vertex and weight of
    * all edges from this vertex.
    */
-  public ArrayList<Pair<Vertex, Integer>> getAdjacency() {
+  public ArrayList<Pair<Vertex, Double>> getAdjacency() {
     return this.adjacency;
   }
 
@@ -78,31 +68,14 @@ public class Vertex {
    * @param v The vertex to which the edge should go.
    * @return The weight of the edge between this vertex and the vertex v.
    */
-  public int getWeight(SPVertex v) {
-    for (Pair<Vertex, Integer> u : this.adjacency) {
+  public Double getWeight(SPVertex v) {
+    for (Pair<Vertex, Double> u : this.adjacency) {
       if (v == u.getItem1()) {
         return u.getItem2();
       }
     }
-    return -1;
+    return null;
   }
-
-  /**
-   * Get the index of this vertex.
-   * @return The index of the vertex.
-   */
-  // public Integer getIndex() {
-  //   return this.index;
-  // }
-
-
-  /**
-   * Set the index of this vertex.
-   * @param index The new index of the vertex.
-   */
-  // public void setIndex(Integer index) {
-  //   this.index = index;
-  // }
 
 
   /**
@@ -111,7 +84,7 @@ public class Vertex {
    * @return True if v is adjancent to this vertex.
    */
   public boolean isAdjacent(Vertex v) {
-    for (Pair<Vertex, Integer> u : this.adjacency) {
+    for (Pair<Vertex, Double> u : this.adjacency) {
       if (v == u.getItem1()) {
         return true;
       }

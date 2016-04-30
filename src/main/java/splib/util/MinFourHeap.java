@@ -3,13 +3,24 @@ package splib.util;
 import splib.util.Heap;
 import splib.util.Pair;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.lang.Math;
 
 
 /**
  * A minimum four-heap, keyed with integers, holding elements of type E.
  */
-public class MinFourHeap<E> extends Heap<E> {
+public class MinFourHeap<E extends Comparable> extends Heap<E> {
+
+
+  public MinFourHeap(Comparator<E> c, ArrayList<E> elements) {
+    super(c, elements);
+  }
+
+  public MinFourHeap(Comparator<E> c) {
+    super(c);
+  }
+
 
   /**
    * Maintain the heap property on the given subtree rooted at the ith element.
@@ -26,28 +37,28 @@ public class MinFourHeap<E> extends Heap<E> {
       int least = 0;
 
       if (l < this.elements.size()
-          && this.elements.get(l).getItem2()
-          <  this.elements.get(i).getItem2()) {
+          && this.comparator.compare(this.elements.get(l),
+          this.elements.get(i)) < 0) {
         least = l;
       } else {
         least = i;
       }
 
       if (ml < this.elements.size()
-          && this.elements.get(ml).getItem2()
-          <  this.elements.get(least).getItem2()) {
+          && this.comparator.compare(this.elements.get(ml),
+          this.elements.get(least)) < 0) {
         least = ml;
       }
 
       if (mr < this.elements.size()
-          && this.elements.get(mr).getItem2()
-          <  this.elements.get(least).getItem2()) {
+          && this.comparator.compare(this.elements.get(mr),
+          this.elements.get(least)) < 0) {
         least = mr;
       }
 
       if (r < this.elements.size()
-          && this.elements.get(r).getItem2()
-          <  this.elements.get(least).getItem2()) {
+          && this.comparator.compare(this.elements.get(r),
+          this.elements.get(least)) < 0) {
         least = r;
       }
 
@@ -66,12 +77,12 @@ public class MinFourHeap<E> extends Heap<E> {
     if (i == j) {
       return;
     }
-    Pair<E, Integer> tmp = this.elements.get(i);
+    E tmp = this.elements.get(i);
     this.elements.set(i, this.elements.get(j));
     this.elements.set(j, tmp);
 
-    this.indexMap.put(this.elements.get(i).getItem1(), i);
-    this.indexMap.put(this.elements.get(j).getItem1(), j);
+    this.indexMap.put(this.elements.get(i), i);
+    this.indexMap.put(this.elements.get(j), j);
   }
 
 
@@ -82,14 +93,8 @@ public class MinFourHeap<E> extends Heap<E> {
    * @param key The new key value
    */
   @Override
-  public void changeKey(int i, int key) {
-    if (key > this.elements.get(i).getItem2()) {
-      return;
-    }
-
-    this.elements.set(i, new Pair<E, Integer>(this.elements.get(i).getItem1(), key));
-
-    while (i != 0 && key < this.elements.get(this.parent(i)).getItem2()) {
+  public void changeKey(int i) {
+    while (i != 0 && this.elements.get(i).compareTo((this.parent(i))) < 0) {
       this.swap(i, this.parent(i));
       i = this.parent(i);
     }

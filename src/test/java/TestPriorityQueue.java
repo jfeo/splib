@@ -9,55 +9,64 @@ import splib.util.PriorityQueue;
 import splib.data.Graph;
 import splib.data.SPVertex;
 import splib.data.Vertex;
-import splib.util.IndexKeeper;
 import splib.util.MinBinaryHeap;
+import java.util.Comparator;
 
 
 public class TestPriorityQueue {
 
+  private class StringComparator implements Comparator<String> {
+    public int compare(String s1, String s2) {
+      return s1.compareTo(s2);
+    }
+  }
+
   @Test
   public void test_emptyConstructor() {
-    MinBinaryHeap<String> h = new MinBinaryHeap<>();
+    StringComparator sCompare = new StringComparator();
+
+    MinBinaryHeap<String> h = new MinBinaryHeap<String>(sCompare);
     PriorityQueue<String> Q = new PriorityQueue<String>(h);
-    Q.insert("Second string", 10);
-    Q.insert("Fifth string", 9999);
-    Q.insert("Third string", 100);
-    Q.insert("Fourth string", 500);
-    Q.insert("First string", 1);
+    Q.insert("B Second string");
+    Q.insert("E Fifth string");
+    Q.insert("C Third string");
+    Q.insert("D Fourth string");
+    Q.insert("A First string");
 
     String s = Q.extract();
-    assertEquals("First string", s);
+    assertEquals("A First string", s);
     s = Q.extract();
-    assertEquals("Second string", s);
+    assertEquals("B Second string", s);
     s = Q.extract();
-    assertEquals("Third string", s);
+    assertEquals("C Third string", s);
     s = Q.extract();
-    assertEquals("Fourth string", s);
+    assertEquals("D Fourth string", s);
     s = Q.extract();
-    assertEquals("Fifth string", s);
+    assertEquals("E Fifth string", s);
   }
 
 
   @Test
   public void test_arrayConstructor() {
-    ArrayList<Pair<String, Integer>> A = new ArrayList<Pair<String, Integer>>();
-    A.add(new Pair<String, Integer>("Second string", 10));
-    A.add(new Pair<String, Integer>("Fifth string", 9999));
-    A.add(new Pair<String, Integer>("Third string", 100));
-    A.add(new Pair<String, Integer>("Fourth string", 500));
-    A.add(new Pair<String, Integer>("First string", 1));
-    PriorityQueue<String> Q = new PriorityQueue<String>(new MinBinaryHeap(A));
+    StringComparator sCompare = new StringComparator();
+    ArrayList<String> A = new ArrayList<String>();
+    A.add("B Second string");
+    A.add("E Fifth string");
+    A.add("C Third string");
+    A.add("D Fourth string");
+    A.add("A First string");
+    PriorityQueue<String> Q = new PriorityQueue<String>(new MinBinaryHeap(sCompare, A));
 
     String s = Q.extract();
-    assertEquals("First string", s);
+    assertEquals("A First string", s);
     s = Q.extract();
-    assertEquals("Second string", s);
+    assertEquals("B Second string", s);
     s = Q.extract();
-    assertEquals("Third string", s);
+    assertEquals("C Third string", s);
     s = Q.extract();
-    assertEquals("Fourth string", s);
+    assertEquals("D Fourth string", s);
     s = Q.extract();
-    assertEquals("Fifth string", s);
+    assertEquals("E Fifth string", s);
   }
 
 

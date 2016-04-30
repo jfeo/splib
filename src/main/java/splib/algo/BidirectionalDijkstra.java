@@ -24,7 +24,7 @@ public class BidirectionalDijkstra {
    *  @param t The target vertex.
    *  @return ...
    */
-  public static Integer singlePair(Heap<BDDVertex> hs, Heap<BDDVertex> ht,
+  public static Double singlePair(Heap<BDDVertex> hs, Heap<BDDVertex> ht,
       Graph<BDDVertex> G, BDDVertex s, BDDVertex t) {
     BidirectionalDijkstra.initializeSinglePair(G, s, t);
     PriorityQueue<BDDVertex> Qs = new PriorityQueue<BDDVertex>(hs);
@@ -32,15 +32,16 @@ public class BidirectionalDijkstra {
     ArrayList<BDDVertex> Ss = new ArrayList<BDDVertex>();
     ArrayList<BDDVertex> St = new ArrayList<BDDVertex>();
 
-    Qs.insert(s, s.getEstimate());
-    Qt.insert(t, t.getSuccessorEstimate());
+    Qs.insert(s);
+    Qt.insert(t);
 
     // Continue, while the minimum elements of the two queues, are not identical
     while (Qs.top() != Qt.top()) {
+
       BDDVertex u = Qs.extract();
       Ss.add(u);
 
-      for (Pair<Vertex, Integer> v : u.getAdjacency()) {
+      for (Pair<Vertex, Double> v : u.getAdjacency()) {
         Dijkstra.relax(Qs, u, (BDDVertex)v.getItem1(), v.getItem2());
       }
 
@@ -54,7 +55,7 @@ public class BidirectionalDijkstra {
       u = Qt.extract();
       St.add(u);
 
-      for (Pair<Vertex, Integer> v : u.getAdjacency()) {
+      for (Pair<Vertex, Double> v : u.getAdjacency()) {
         BidirectionalDijkstra.relax(Qt, u, (BDDVertex)v.getItem1(), v.getItem2());
       }
 
@@ -92,12 +93,12 @@ public class BidirectionalDijkstra {
    */
   private static void initializeSinglePair(Graph<BDDVertex> G, BDDVertex s, BDDVertex t){
     for (BDDVertex v : G.getVertices()){
-      v.setEstimate(Integer.MAX_VALUE);
-      v.setSuccessorEstimate(Integer.MAX_VALUE);
+      v.setEstimate(Double.MAX_VALUE);
+      v.setSuccessorEstimate(Double.MAX_VALUE);
       v.setPredecessor(null);
     }
-    s.setEstimate(0);
-    t.setSuccessorEstimate(0);
+    s.setEstimate(0.0);
+    t.setSuccessorEstimate(0.0);
   }
 
 
@@ -108,20 +109,20 @@ public class BidirectionalDijkstra {
    * @param v The end vertex.
    * @param weight The weight of the edge.
    */
-  public static void relax(PriorityQueue<BDDVertex> Q, BDDVertex u, BDDVertex v, int weight) {
-    int newEstimate = u.getSuccessorEstimate() + weight;
+  public static void relax(PriorityQueue<BDDVertex> Q,
+      BDDVertex u, BDDVertex v, double weight) {
+    double newEstimate = u.getSuccessorEstimate() + weight;
     if (v.getSuccessorEstimate() > newEstimate) {
       v.setSuccessor(u);
       v.setSuccessorEstimate(newEstimate);
-      Q.insert(v, newEstimate);
-      Q.changeKey(v, newEstimate);
+      Q.insert(v);
     }
   }
 
 
-  private static Integer checkShortestPath(ArrayList<BDDVertex> S,
+  private static Double checkShortestPath(ArrayList<BDDVertex> S,
       PriorityQueue<BDDVertex> Qs, PriorityQueue<BDDVertex> Qt) {
-    int bestPath = Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
+    double bestPath = Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
     S.removeAll(Collections.singleton(null));
     for (BDDVertex v : S) {
       if (v.getEstimate() < bestPath) {
