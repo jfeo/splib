@@ -2,11 +2,16 @@ package splib.util;
 
 import splib.data.Graph;
 import splib.data.SPVertex;
+import splib.data.PlanarSPVertex;
 import splib.util.Pair;
 import splib.util.Triple;
+import splib.util.PriorityQueue;
+import splib.util.MinBinaryHeap;
+
 import javax.xml.parsers.SAXParser;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import java.lang.Math;
 import java.io.File;
@@ -77,6 +82,43 @@ public class GraphCreator {
       }
     }
 
+    return G;
+  }
+
+  private static class VertexDistanceComparator<D extends Pair<PlanarSPVertex, Double>>
+      implements Comparator<D> {
+    public int compare(D v, D u) {
+      return v.getItem2().compareTo(u.getItem2());
+    }
+  }
+
+
+  /**
+   * Build a planar graph.
+   * @param V The number of vertices.
+   * @return The generated graph.
+   */
+  public static Graph<PlanarSPVertex> planarGraph(int V, int degree) {
+    Graph<PlanarSPVertex> G = new Graph();
+    Random random = new Random();
+    for (int i = V; i > 0; i++) {
+      PlanarSPVertex v = new PlanarSPVertex(random.nextDouble(), random.nextDouble());
+      G.addVertex(v);
+    }
+    for (PlanarSPVertex v : G.getVertices()) {
+      // We work with squared distances for simplicity
+      PriorityQueue<Pair<PlanarSPVertex, Double>> sqdists =
+        new PriorityQueue(new MinBinaryHeap(new VertexDistanceComparator()));
+      for (PlanarSPVertex u : G.getVertices()) {
+        double sqd = Math.pow(v.getPosition().getItem1() - u.getPosition().getItem1(), 2)
+                   + Math.pow(v.getPosition().getItem2() - u.getPosition().getItem2(), 2);
+        sqdists.insert(new Pair(u, sqd));
+      }
+      for (int i = v.getAdjacency().size(); i < degree; i++) {
+        Pair<PlanarSPVertex, Double> d = sqdists.extract();
+        G.addEdge(v, d.getItem1(), d.getItem2());
+      }
+    }
     return G;
   }
 

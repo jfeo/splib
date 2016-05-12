@@ -3,13 +3,23 @@ package splib.util;
 import splib.util.Heap;
 import splib.util.Pair;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.lang.Math;
 
 
 /**
  * A minimum three-heap, keyed with integers, holding elements of type E.
  */
-public class MinThreeHeap<E extends IndexKeeper> extends Heap<E> {
+public class MinThreeHeap<E> extends Heap<E> {
+
+  public MinThreeHeap(Comparator<E> c, ArrayList<E> elements) {
+    super(c, elements);
+  }
+
+  public MinThreeHeap(Comparator<E> c) {
+    super(c);
+  }
+
 
   /**
    * Maintain the heap property on the given subtree rooted at the ith element.
@@ -25,22 +35,22 @@ public class MinThreeHeap<E extends IndexKeeper> extends Heap<E> {
       int least = 0;
 
       if (l < this.elements.size()
-          && this.elements.get(l).getItem2()
-          <  this.elements.get(i).getItem2()) {
+          && this.comparator.compare(this.elements.get(l),
+          this.elements.get(i)) > 0) {
         least = l;
       } else {
         least = i;
       }
 
       if (m < this.elements.size()
-          && this.elements.get(m).getItem2()
-          <  this.elements.get(least).getItem2()) {
+          && this.comparator.compare(this.elements.get(m),
+          this.elements.get(least)) > 0) {
         least = m;
       }
 
       if (r < this.elements.size()
-          && this.elements.get(r).getItem2()
-          <  this.elements.get(least).getItem2()) {
+          && this.comparator.compare(this.elements.get(r),
+          this.elements.get(least)) > 0) {
         least = r;
       }
 
@@ -57,12 +67,12 @@ public class MinThreeHeap<E extends IndexKeeper> extends Heap<E> {
     if (i == j) {
       return;
     }
-    Pair<E, Integer> tmp = this.elements.get(i);
+    E tmp = this.elements.get(i);
     this.elements.set(i, this.elements.get(j));
     this.elements.set(j, tmp);
 
-    this.elements.get(i).getItem1().setIndex(i);
-    this.elements.get(j).getItem1().setIndex(j);
+    this.indexMap.put(this.elements.get(i), i);
+    this.indexMap.put(this.elements.get(j), j);
   }
 
 
@@ -73,14 +83,9 @@ public class MinThreeHeap<E extends IndexKeeper> extends Heap<E> {
    * @param key The new key value
    */
   @Override
-  public void changeKey(int i, int key) {
-    if (key > this.elements.get(i).getItem2()) {
-      return;
-    }
-
-    this.elements.set(i, new Pair<E, Integer>(this.elements.get(i).getItem1(), key));
-
-    while (i != 0 && key < this.elements.get(this.parent(i)).getItem2()) {
+  public void changeKey(int i) {
+    while (i != 0 && this.comparator.compare(this.elements.get(i),
+        this.elements.get(this.parent(i))) < 0) {
       this.swap(i, this.parent(i));
       i = this.parent(i);
     }

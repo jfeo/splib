@@ -1,16 +1,16 @@
 package splib.util;
 
 
-import splib.util.IndexKeeper;
 import splib.util.Pair;
 import splib.util.Heap;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
  * A minimum priority queue.
  */
-public class PriorityQueue<E extends IndexKeeper> {
+public class PriorityQueue<E> {
 
 
   protected Heap<E> heap;
@@ -20,10 +20,10 @@ public class PriorityQueue<E extends IndexKeeper> {
     this.heap = h;
   }
 
-  public PriorityQueue(Heap<E> h, ArrayList<Pair<E, Integer>> A) {
+  public PriorityQueue(Heap<E> h, ArrayList<E> A) {
     this.heap = h;
-    for (Pair<E, Integer> a : A) {
-      this.insert(a.getItem1(), a.getItem2());
+    for (E a : A) {
+      this.insert(a);
     }
   }
 
@@ -39,7 +39,7 @@ public class PriorityQueue<E extends IndexKeeper> {
    */
   public E top() {
     if (this.heap.getElements().size() > 0) {
-      return this.heap.getElements().get(0).getItem1();
+      return this.heap.getElements().get(0);
     } else {
       return null;
     }
@@ -51,10 +51,10 @@ public class PriorityQueue<E extends IndexKeeper> {
    * @param element The element to be inserted.
    * @param key The key value for the element.
    */
-  public void insert(E element, int key) {
-    element.setIndex(this.heap.getElements().size());
-    this.heap.getElements().add(new Pair<E, Integer>(element, Integer.MAX_VALUE));
-    this.heap.changeKey(this.heap.getElements().size() - 1, key);
+  public void insert(E element) {
+    this.heap.getElements().add(element);
+    this.heap.getIndexMap().put(element, this.heap.getElements().size() - 1);
+    this.changeKey(element);
   }
 
   /**
@@ -64,9 +64,9 @@ public class PriorityQueue<E extends IndexKeeper> {
   public E extract() {
     if (this.heap.getElements().size() > 0) {
       E top = this.top();
-      top.setIndex(null);
+      this.heap.getIndexMap().remove(top);
       this.heap.getElements().set(0, this.heap.getElements().get(this.heap.getElements().size() - 1));
-      this.heap.getElements().get(0).getItem1().setIndex(0);
+      this.heap.getIndexMap().put(this.heap.getElements().get(0), 0);
       this.heap.getElements().remove(this.heap.getElements().size() - 1);
       this.heap.heapify(0);
       return top;
@@ -91,7 +91,7 @@ public class PriorityQueue<E extends IndexKeeper> {
    * @return The element at the ith index of the queue.
    */
   public E get(int i) {
-    return this.heap.getElements().get(i).getItem1();
+    return this.heap.getElements().get(i);
   }
 
 
@@ -100,18 +100,15 @@ public class PriorityQueue<E extends IndexKeeper> {
    * @param element The element to find the index of.
    * @return The index of the element, or -1 if no such element exists.
    */
-  public int indexOf(E element) {
-    for (int i = 0; i < this.heap.getElements().size(); i++) {
-      if (element == this.heap.getElements().get(i).getItem1()) {
-        return i;
-      }
-    }
-    return -1;
+  public Integer indexOf(E element) {
+    HashMap<E, Integer> imap = this.heap.getIndexMap();
+    Integer res = imap.get(element);
+    return res;
   }
 
 
-  public void changeKey(int i, int key) {
-    this.heap.changeKey(i, key);
+  public void changeKey(E elem) {
+    this.heap.changeKey(this.indexOf(elem));
   }
 
 

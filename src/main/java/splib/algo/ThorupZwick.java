@@ -10,6 +10,7 @@ import splib.util.Pair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
 import java.lang.Math;
 
@@ -20,7 +21,7 @@ public class ThorupZwick {
   private Graph<TZSPVertex> G;
   private int k;
   private Heap<TZSPVertex> h;
-  private ArrayList<HashSet<TZSPVertex>> A;
+  private ArrayList<ArrayList<TZSPVertex>> A;
   private HashMap<TZSPVertex, ArrayList<TZSPVertex>> B;
   private HashMap<TZSPVertex, ArrayList<TZSPVertex>> C;
 
@@ -28,7 +29,7 @@ public class ThorupZwick {
     this.k = k;
     this.G = G;
     this.h = h;
-    this.A = new ArrayList<HashSet<TZSPVertex>>();
+    this.A = new ArrayList<ArrayList<TZSPVertex>>();
     this.B = new HashMap<TZSPVertex, ArrayList<TZSPVertex>>();
     this.C = new HashMap<TZSPVertex, ArrayList<TZSPVertex>>();
     this.preprocess();
@@ -38,16 +39,16 @@ public class ThorupZwick {
    * Preprocess a graph.
    */
   public void preprocess() {
-    this.A.add(new HashSet<TZSPVertex>());
+    this.A.add(new ArrayList<TZSPVertex>());
     this.A.get(0).addAll(this.G.getVertices());
     Random rand = new Random();
 
     // Compute i-centers
-    for (int i = 1; i < k - 1; i++) {
-      this.A.add(new HashSet<TZSPVertex>());
+    for (int i = 1; i < k; i++) {
+      this.A.add(new ArrayList<TZSPVertex>());
 
-      HashSet<TZSPVertex> preA = this.A.get(i-1);
-      HashSet<TZSPVertex> curA = this.A.get(i);
+      ArrayList<TZSPVertex> preA = this.A.get(i-1);
+      ArrayList<TZSPVertex> curA = this.A.get(i);
 
       for (TZSPVertex v : preA) {
         if (Math.random() < Math.pow(curA.size(), - 1 / (double)k)) {
@@ -55,32 +56,42 @@ public class ThorupZwick {
         }
       }
     }
+    this.A.add(new ArrayList<TZSPVertex>());
 
     for (int i = k - 1; i >= 0; i--) {
       // Compute witnesses
+      // Insert 'fake' vertex with 0 edges to vertices in A_i, for SSSP
+      TZSPVertex s = new TZSPVertex(this.k);
+      int sIndex = this.G.addVertex(s);
+      for (TZSPVertex w : this.A.get(i)) {
+        this.G.addEdge(s, w, 0.0);
+      }
+
+      // Perform SSSP from 'fake' vertex, and find witnesses of all vertices
+      this.singleSource(s, i);
       for (TZSPVertex v : this.G.getVertices()) {
-        this.singleSource(v, i);
-        // compute d(A_i, v) and find p_i(v) in A_i such that d(p_i(v), v) = d(A_i, v)
-        // if d(A_i, v) = d(A_i+1, v) then p_i(v) := p_i+1(v)
-        Integer witnessWeight = Integer.MAX_VALUE;
-        TZSPVertex witness = null;
-        for (TZSPVertex w = this.A.get(i).iterator().next(); this.A.get(i).iterator().hasNext();) {
+        double witnessWeight = Double.MAX_VALUE;
+
+        // TODO: Remove redundancy? Checking first vertex twice
+        TZSPVertex witness = this.A.get(i).get(0);
+        for (TZSPVertex w : this.A.get(i)) {
           if (w.getEstimate() < witness.getEstimate()) {
             witness = w;
           }
         }
         v.setWitness(i, witness, witness.getEstimate());
       }
+      this.G.removeVertex(s);
 
       // Compute clusters
-      HashSet<TZSPVertex> tmp = (HashSet<TZSPVertex>)A.get(0).clone();
-      tmp.removeAll(this.A.get(1));
-      for (TZSPVertex w = tmp.iterator().next(); tmp.iterator().hasNext();) {
+      ArrayList<TZSPVertex> tmp = (ArrayList<TZSPVertex>)A.get(i).clone();
+      tmp.removeAll(this.A.get(i+1));
+      for (TZSPVertex w : tmp) {
         this.singleSource(w, i);
         // C(w) = { v in V | d(w, v) < d(A_i+1, v) }
         ArrayList<TZSPVertex> wC = new ArrayList<TZSPVertex>();
         for (TZSPVertex v : this.G.getVertices()) {
-          if (v.getEstimate() < v.getWitness(i+1).getItem2()) {
+          if (v.getWitness(i+1).getItem1() != null && v.getEstimate() < v.getWitness(i+1).getItem2()) {
             wC.add(v);
           }
         }
@@ -89,9 +100,9 @@ public class ThorupZwick {
     }
 
     // Compute bunches
-    HashSet<TZSPVertex> tmp = (HashSet<TZSPVertex>)A.get(0).clone();
+    ArrayList<TZSPVertex> tmp = (ArrayList<TZSPVertex>)A.get(0).clone();
     tmp.removeAll(this.A.get(1));
-    for (TZSPVertex v = tmp.iterator().next(); tmp.iterator().hasNext();) {
+    for (TZSPVertex v : tmp) {
       // C(w) = { v in V | d(w, v) < d(A_i+1, v) }
       ArrayList<TZSPVertex> vB = new ArrayList<TZSPVertex>();
       for (TZSPVertex w : this.G.getVertices()) {
@@ -111,10 +122,10 @@ public class ThorupZwick {
    * @param u The vertex on one end of the path.
    * @param v The vertex on the other end of the path.
    */
-  public Integer query(TZSPVertex u, TZSPVertex v) {
+  public Double query(TZSPVertex u, TZSPVertex v) {
     TZSPVertex w = u;
-    int i = 0;
 
+    int i = 0;
     while (!B.get(v).contains(w)) {
       i += 1;
       TZSPVertex tmp = v;
@@ -123,7 +134,7 @@ public class ThorupZwick {
       w = u.getWitness(i).getItem1();
     }
 
-    return 0;
+    return 0.0;
   }
 
 
@@ -138,13 +149,13 @@ public class ThorupZwick {
     ArrayList<TZSPVertex> S = new ArrayList<TZSPVertex>();
     PriorityQueue<TZSPVertex> Q = new PriorityQueue<TZSPVertex>(this.h);
     for (TZSPVertex v : this.G.getVertices()) {
-      Q.insert(v, v.getEstimate());
+      Q.insert(v);
     }
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
       TZSPVertex u = Q.extract();
       S.add(u);
-      for (Pair<Vertex, Integer> v : u.getAdjacency()) {
+      for (Pair<Vertex, Double> v : u.getAdjacency()) {
         this.relax(Q, u, (TZSPVertex)v.getItem1(), v.getItem2(), i);
       }
     }
@@ -159,14 +170,12 @@ public class ThorupZwick {
    * @param v The second vertex.
    * @param weight The weight of the edge between the first and the second vertex.
    */
-  private void relax(PriorityQueue Q, TZSPVertex u, TZSPVertex v, int weight, int i) {
-    int newEstimate = u.getEstimate() + weight;
-    if (v.getWitness(i+1).getItem2() > newEstimate) {
+  private void relax(PriorityQueue Q, TZSPVertex u, TZSPVertex v, double weight, int i) {
+    double newEstimate = u.getEstimate() + weight;
+    if (v.getWitness(i+1).getItem1() != null && v.getWitness(i+1).getItem2() > newEstimate) {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);
-      if (v.getIndex() != null) {
-        Q.changeKey(v.getIndex(), newEstimate);
-      }
+      Q.changeKey(v);
     }
   }
 
@@ -180,7 +189,7 @@ public class ThorupZwick {
    */
   private void initializeSingleSource(TZSPVertex s) {
     for (TZSPVertex v : this.G.getVertices()) {
-      v.setEstimate(Integer.MAX_VALUE);
+      v.setEstimate(Double.MAX_VALUE);
       v.setPredecessor(null);
     }
     s.setEstimate(0);
