@@ -1,6 +1,7 @@
 package splib.util;
 
 import splib.data.Graph;
+import splib.data.Vertex;
 import splib.data.SPVertex;
 import splib.data.PlanarSPVertex;
 import splib.util.Pair;
@@ -101,7 +102,7 @@ public class GraphCreator {
   public static Graph<PlanarSPVertex> planarGraph(int V, int degree) {
     Graph<PlanarSPVertex> G = new Graph();
     Random random = new Random();
-    for (int i = V; i > 0; i++) {
+    for (int i = 0; i < V; i++) {
       PlanarSPVertex v = new PlanarSPVertex(random.nextDouble(), random.nextDouble());
       G.addVertex(v);
     }
@@ -115,8 +116,19 @@ public class GraphCreator {
         sqdists.insert(new Pair(u, sqd));
       }
       for (int i = v.getAdjacency().size(); i < degree; i++) {
-        Pair<PlanarSPVertex, Double> d = sqdists.extract();
-        G.addEdge(v, d.getItem1(), d.getItem2());
+        Pair<PlanarSPVertex, Double> d;
+        // add only new edges
+        boolean exists = true;
+        while (exists) {
+          d = sqdists.extract();
+          exists = false;
+          for (Pair<Vertex, Double> adj : v.getAdjacency()) {
+            exists = exists || (PlanarSPVertex)adj.getItem1() == d.getItem1();
+          }
+          if (!exists) {
+            G.addEdge(v, d.getItem1(), d.getItem2());
+          }
+        }
       }
     }
     return G;
