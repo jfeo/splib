@@ -4,6 +4,7 @@ package splib.util;
 import splib.util.Pair;
 import splib.util.Heap;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -99,8 +100,10 @@ public class PriorityQueue<E> {
    * @param element The element to find the index of.
    * @return The index of the element, or -1 if no such element exists.
    */
-  public int indexOf(E element) {
-    return this.heap.getIndexMap().get(element);
+  public Integer indexOf(E element) {
+    HashMap<E, Integer> imap = this.heap.getIndexMap();
+    Integer res = imap.get(element);
+    return res;
   }
 
 
