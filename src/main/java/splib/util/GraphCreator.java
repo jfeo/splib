@@ -121,6 +121,9 @@ public class GraphCreator {
         boolean exists = true;
         while (exists) {
           d = sqdists.extract();
+          if (d.getItem1() == v) {
+            continue;
+          }
           exists = false;
           for (Pair<Vertex, Double> adj : v.getAdjacency()) {
             exists = exists || (PlanarSPVertex)adj.getItem1() == d.getItem1();
