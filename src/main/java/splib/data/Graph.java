@@ -26,14 +26,19 @@ public class Graph<V extends Vertex> {
     this.vertices.remove(v);
     for (Pair<Vertex, Double> u : v.getAdjacency()) {
       u.getItem1().removeAdjacency(v);
+      this.edgeCount--;
     }
   }
 
   public void addEdge(int uIndex, int vIndex, double weight) {
     V u = this.vertices.get(uIndex);
     V v = this.vertices.get(vIndex);
-    u.addAdjacency(v, weight);
+    this.addEdge(v, u, weight);
+  }
+
+  public void addEdge(Vertex v, Vertex u, double weight) {
     v.addAdjacency(u, weight);
+    u.addAdjacency(v, weight);
     this.edgeCount++;
   }
 
