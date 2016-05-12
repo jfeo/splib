@@ -77,7 +77,7 @@ public class Astar {
         }
         Astar.relax(heur, open, u, (PlanarSPVertex)v.getItem1(), t, v.getItem2());
         if (v.getItem1() == t) {
-          break;
+          return t.getEstimate();
         }
       }
     }
