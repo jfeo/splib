@@ -24,7 +24,7 @@ public class TestAstar {
   @Test
   public void test_singlePair() {
     System.out.println("Running test");
-    Graph<PlanarSPVertex> G = GraphCreator.planarGraph(100, 10);
+    Graph<PlanarSPVertex> G = GraphCreator.planarGraph(4, 4);
 
     // PlanarSPVertex v1 = new PlanarSPVertex();
     // G.addVertex(v1);
