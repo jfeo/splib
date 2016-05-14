@@ -2,6 +2,7 @@ package splib.algo;
 
 
 import splib.data.Graph;
+import splib.data.SPVertex;
 import splib.data.TZSPVertex;
 import splib.data.Vertex;
 import splib.util.Heap;
@@ -33,15 +34,15 @@ public class ThorupZwick {
     this.B = new HashMap<TZSPVertex, ArrayList<TZSPVertex>>();
     this.C = new HashMap<TZSPVertex, ArrayList<TZSPVertex>>();
     this.preprocess();
-  }
-
+    System.out.println("Done preprocessing!");
+  }	
   /**
    * Preprocess a graph.
    */
   public void preprocess() {
     this.A.add(new ArrayList<TZSPVertex>());
     this.A.get(0).addAll(this.G.getVertices());
-    Random rand = new Random();
+  
 
     // Compute i-centers
     for (int i = 1; i < k; i++) {
@@ -62,24 +63,24 @@ public class ThorupZwick {
       // Compute witnesses
       // Insert 'fake' vertex with 0 edges to vertices in A_i, for SSSP
       TZSPVertex s = new TZSPVertex(this.k);
-      int sIndex = this.G.addVertex(s);
       for (TZSPVertex w : this.A.get(i)) {
         this.G.addEdge(s, w, 0.0);
+        w.setWitness(i, w, 0.0);
       }
 
       // Perform SSSP from 'fake' vertex, and find witnesses of all vertices
-      this.singleSource(s, i);
+      Dijkstra.<TZSPVertex>singleSource(this.h, this.G, s);
       for (TZSPVertex v : this.G.getVertices()) {
-        double witnessWeight = Double.MAX_VALUE;
-
-        // TODO: Remove redundancy? Checking first vertex twice
-        TZSPVertex witness = this.A.get(i).get(0);
-        for (TZSPVertex w : this.A.get(i)) {
-          if (w.getEstimate() < witness.getEstimate()) {
-            witness = w;
-          }
-        }
-        v.setWitness(i, witness, witness.getEstimate());
+    	Pair<TZSPVertex, Double> preWitness = v.getWitness(i+1);
+    	if (preWitness.getItem2() == v.getEstimate()) {
+    		v.setWitness(i, preWitness.getItem1(), v.getEstimate());
+    	} else {
+    		TZSPVertex witness = (TZSPVertex)v.getPredecessor();
+        	while (witness != null && witness.getWitness(i).getItem1() != witness) {
+        		witness = (TZSPVertex)witness.getPredecessor();
+        	}
+            v.setWitness(i, witness, v.getEstimate());	
+    	}
       }
       this.G.removeVertex(s);
 
@@ -100,19 +101,14 @@ public class ThorupZwick {
     }
 
     // Compute bunches
-    ArrayList<TZSPVertex> tmp = (ArrayList<TZSPVertex>)A.get(0).clone();
-    tmp.removeAll(this.A.get(1));
-    for (TZSPVertex v : tmp) {
-      // C(w) = { v in V | d(w, v) < d(A_i+1, v) }
-      ArrayList<TZSPVertex> vB = new ArrayList<TZSPVertex>();
-      for (TZSPVertex w : this.G.getVertices()) {
-        for (TZSPVertex c : this.C.get(w)) {
-          if (w == c) {
-            vB.add(w);
-          }
-        }
-      }
-      B.put(v, vB);
+    for (TZSPVertex v : this.G.getVertices()) {
+    	ArrayList<TZSPVertex> vB = new ArrayList<TZSPVertex>();
+    	for (TZSPVertex w : this.G.getVertices()) {
+    		if (this.C.get(w).contains(v)) {
+    			vB.add(w);
+    		}
+    	}
+    	this.B.put(v, vB);
     }
   }
 
@@ -127,7 +123,7 @@ public class ThorupZwick {
 
     int i = 0;
     while (!B.get(v).contains(w)) {
-      i += 1;
+      i++;
       TZSPVertex tmp = v;
       v = u;
       u = tmp;

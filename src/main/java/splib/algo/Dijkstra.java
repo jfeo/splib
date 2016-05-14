@@ -22,21 +22,21 @@ public class Dijkstra {
    * @param s The source vertex. Undefined behaviour, if this vertex is not in G.
    * @return The vertices.
    */
-  public static ArrayList<SPVertex> singleSource(
-      Heap<SPVertex> h, Graph<SPVertex> G, SPVertex s) {
+  public static <V extends SPVertex> ArrayList<V> singleSource(
+      Heap<V> h, Graph<V> G, V s) {
     Dijkstra.initializeSingleSource(G, s);
 
-    ArrayList<SPVertex> S = new ArrayList<SPVertex>();
-    PriorityQueue<SPVertex> Q = new PriorityQueue<SPVertex>(h);
+    ArrayList<V> S = new ArrayList<V>();
+    PriorityQueue<V> Q = new PriorityQueue<V>(h);
 
     Q.insert(s);
 
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
-      SPVertex u = Q.extract();
+      V u = Q.extract();
       S.add(u);
       for (Pair<Vertex, Double> v : u.getAdjacency()) {
-        Dijkstra.relax(Q, u, (SPVertex)v.getItem1(), v.getItem2());
+        Dijkstra.relax(Q, u, (V)v.getItem1(), v.getItem2());
       }
     }
     return S;
@@ -50,8 +50,8 @@ public class Dijkstra {
    * @param G The graph to work on.
    * @param s The source vertex.
    */
-  public static void initializeSingleSource(Graph<SPVertex> G, SPVertex s) {
-    for (SPVertex v : G.getVertices()) {
+  public static <V extends SPVertex> void initializeSingleSource(Graph<V> G, V s) {
+    for (V v : G.getVertices()) {
       v.setEstimate(Double.MAX_VALUE);
       v.setPredecessor(null);
     }
@@ -66,8 +66,8 @@ public class Dijkstra {
    * @param v The second vertex.
    * @param weight The weight of the edge between the first and the second vertex.
    */
-  public static void relax(PriorityQueue Q, SPVertex u, SPVertex v, double weight) {
-     double newEstimate = u.getEstimate() + weight;
+  public static <V extends SPVertex> void relax(PriorityQueue<V> Q, V u, V v, double weight) {
+    double newEstimate = u.getEstimate() + weight;
     if (v.getEstimate() > newEstimate) {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);

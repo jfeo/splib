@@ -24,7 +24,7 @@ public class TestAstar {
   @Test
   public void test_singlePair() {
     System.out.println("Running test");
-    Graph<PlanarSPVertex> G = GraphCreator.planarGraph(4, 4);
+    Graph<PlanarSPVertex> G = GraphCreator.planarGraph(4, 3);
 
     // PlanarSPVertex v1 = new PlanarSPVertex();
     // G.addVertex(v1);
@@ -47,13 +47,16 @@ public class TestAstar {
 
     System.out.println("Running algorithm");
     double length;
-
-    length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(new Astar.AstarComparator(G.getVertices().get(1), Astar::euclidianHeuristic)), G, G.getVertices().get(0), G.getVertices().get(1),
+    PlanarSPVertex s = G.getVertices().get(0);
+    PlanarSPVertex t = G.getVertices().get(1);
+    length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(new Astar.AstarComparator(t, Astar::euclidianHeuristic)), G, s, t,
         Astar::euclidianHeuristic);
     System.out.println(length);
-    System.out.println(Astar.euclidianHeuristic(G.getVertices().get(0), G.getVertices().get(1)));
-    pointprint(G.getVertices().get(0));
-    pointprint(G.getVertices().get(1));
+    System.out.println(Astar.euclidianHeuristic(s, t));
+    double lolz = Astar.euclidianHeuristic(s, t);
+    lolz = lolz +1;
+    pointprint(s);
+    pointprint(t);
 
 
 //     length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(new AstarComparator(v4, Astar.euclidianHeuristic)), G, v1, v4, Astar.euclidianHeuristic);
@@ -74,5 +77,24 @@ public class TestAstar {
 //     length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(new AstarComparator(v5, Astar.euclidianHeuristic)), G, v4, v5, Astar.euclidianHeuristic);
 //     assertEquals(1.0, length, DELTA);
   }
+  
+  @Test
+  public void dijkstraAndAstar() {
+	
+}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 }
