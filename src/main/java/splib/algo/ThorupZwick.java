@@ -72,7 +72,7 @@ public class ThorupZwick {
       Dijkstra.<TZSPVertex>singleSource(this.h, this.G, s);
       for (TZSPVertex v : this.G.getVertices()) {
     	Pair<TZSPVertex, Double> preWitness = v.getWitness(i+1);
-    	if (preWitness.getItem2() == v.getEstimate()) {
+    	if ((Double)v.getEstimate() == preWitness.getItem2()) {
     		v.setWitness(i, preWitness.getItem1(), v.getEstimate());
     	} else {
     		TZSPVertex witness = (TZSPVertex)v.getPredecessor();
