@@ -113,7 +113,7 @@ public class GraphCreator {
       for (PlanarSPVertex u : G.getVertices()) {
         double sqd = Math.pow(v.getPosition().getItem1() - u.getPosition().getItem1(), 2)
                    + Math.pow(v.getPosition().getItem2() - u.getPosition().getItem2(), 2);
-        sqdists.insert(new Pair(u, Math.sqrt(sqd));
+        sqdists.insert(new Pair(u, Math.sqrt(sqd)));
       }
       for (int i = v.getAdjacency().size(); i < degree; i++) {
         Pair<PlanarSPVertex, Double> d;
