@@ -52,7 +52,7 @@ public class Dijkstra {
    */
   public static <V extends SPVertex> void initializeSingleSource(Graph<V> G, V s) {
     for (V v : G.getVertices()) {
-      v.setEstimate(Double.MAX_VALUE);
+      v.setEstimate(1.0f / 0.0f); // Infinity
       v.setPredecessor(null);
     }
     s.setEstimate(0);

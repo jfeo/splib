@@ -19,7 +19,7 @@ public class SPVertex extends Vertex {
   public SPVertex() {
     super();
     this.pred = null;
-    this.estimate = Double.MAX_VALUE;
+    this.estimate = 1.0d / 0.0d; // Infinity
   }
 
   public SPVertex getPredecessor() {

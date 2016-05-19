@@ -13,7 +13,7 @@ public class BDDVertex extends SPVertex {
 
   public BDDVertex() {
     super();
-    this.succEstimate = Double.MAX_VALUE;
+    this.succEstimate = 1.0d / 0.0d; // Infinity
     this.succ = null;
   }
 

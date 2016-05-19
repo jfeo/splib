@@ -94,7 +94,7 @@ public class Astar {
    */
   public static void initializeSingleSource(Graph<PlanarSPVertex> G, SPVertex s) {
     for (PlanarSPVertex v : G.getVertices()) {
-      v.setEstimate(Double.MAX_VALUE);
+      v.setEstimate(1.0d / 0.0d); // Infinity
       v.setPredecessor(null);
     }
     s.setEstimate(0);

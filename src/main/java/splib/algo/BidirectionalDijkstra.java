@@ -93,8 +93,8 @@ public class BidirectionalDijkstra {
    */
   private static void initializeSinglePair(Graph<BDDVertex> G, BDDVertex s, BDDVertex t){
     for (BDDVertex v : G.getVertices()){
-      v.setEstimate(Double.MAX_VALUE);
-      v.setSuccessorEstimate(Double.MAX_VALUE);
+      v.setEstimate(1.0d / 0.0d); // Infinity
+      v.setSuccessorEstimate(1.0d / 0.0d); // Infinity
       v.setPredecessor(null);
     }
     s.setEstimate(0.0);
