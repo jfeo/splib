@@ -8,6 +8,8 @@ import java.util.Comparator;
 import splib.util.GraphCreator;
 import splib.util.Pair;
 import splib.algo.Astar;
+import splib.util.ForwardComparator;
+import splib.algo.Dijkstra;
 import splib.data.Graph;
 import splib.data.PlanarSPVertex;
 import splib.data.Vertex;
@@ -23,40 +25,47 @@ public class TestAstar {
 
   @Test
   public void test_singlePair() {
-    System.out.println("Running test");
-    Graph<PlanarSPVertex> G = GraphCreator.planarGraph(4, 3);
-
-    // PlanarSPVertex v1 = new PlanarSPVertex();
-    // G.addVertex(v1);
-    // PlanarSPVertex v2 = new PlanarSPVertex();
-    // G.addVertex(v2);
-    // PlanarSPVertex v3 = new PlanarSPVertex();
-    // G.addVertex(v3);
-    // PlanarSPVertex v4 = new PlanarSPVertex();
-    // G.addVertex(v4);
-    // PlanarSPVertex v5 = new PlanarSPVertex();
-    // G.addVertex(v5);
-
-    // G.addEdge(0, 1, 3.0);
-    // G.addEdge(0, 4, 10.0);
-    // G.addEdge(1, 4, 5.0);
-    // G.addEdge(1, 3, 4.0);
-    // G.addEdge(1, 2, 1.0);
-    // G.addEdge(2, 3, 2.0);
-    // G.addEdge(3, 4, 1.0);
-
-    System.out.println("Running algorithm");
     double length;
-    PlanarSPVertex s = G.getVertices().get(0);
-    PlanarSPVertex t = G.getVertices().get(1);
-    length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(new Astar.AstarComparator(t, Astar::euclidianHeuristic)), G, s, t,
-        Astar::euclidianHeuristic);
-    System.out.println(length);
-    System.out.println(Astar.euclidianHeuristic(s, t));
-    double lolz = Astar.euclidianHeuristic(s, t);
-    lolz = lolz +1;
-    pointprint(s);
-    pointprint(t);
+    Graph<PlanarSPVertex> G;
+    ForwardComparator<PlanarSPVertex> fCompare = new ForwardComparator();
+    PlanarSPVertex t;
+    PlanarSPVertex s;
+
+    // Test case
+    for (int i = 10; i <= 1000; i += 10) {
+      for (int d = 3; d <= i / 3; d++) {
+        System.out.printf("Testing A* on graph with %d vertices and a degree of %d\n", i, d);
+        G = GraphCreator.planarGraph(i, d);
+        s = G.getVertices().get(0);
+        t = G.getVertices().get(1);
+        length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(
+              new Astar.AstarComparator(t, Astar::euclidianHeuristic)), G, s, t,
+              Astar::euclidianHeuristic);
+        Dijkstra.singleSource(new MinBinaryHeap<PlanarSPVertex>(fCompare), G, s);
+        assertEquals(t.getEstimate(), length, DELTA);
+      }
+
+    }
+
+    // Test case
+    G = GraphCreator.planarGraph(100, 4);
+    s = G.getVertices().get(0);
+    t = G.getVertices().get(1);
+    length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(
+          new Astar.AstarComparator(t, Astar::euclidianHeuristic)), G, s, t,
+          Astar::euclidianHeuristic);
+    Dijkstra.singleSource(new MinBinaryHeap<PlanarSPVertex>(fCompare), G, s);
+    assertEquals(length, t.getEstimate(), DELTA);
+
+    // Test case
+    G = GraphCreator.planarGraph(1000, 3);
+    s = G.getVertices().get(0);
+    t = G.getVertices().get(1);
+    length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(
+          new Astar.AstarComparator(t, Astar::euclidianHeuristic)), G, s, t,
+          Astar::euclidianHeuristic);
+    Dijkstra.singleSource(new MinBinaryHeap<PlanarSPVertex>(fCompare), G, s);
+    assertEquals(length, t.getEstimate(), DELTA);
 
 
 //     length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(new AstarComparator(v4, Astar.euclidianHeuristic)), G, v1, v4, Astar.euclidianHeuristic);
@@ -77,24 +86,24 @@ public class TestAstar {
 //     length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(new AstarComparator(v5, Astar.euclidianHeuristic)), G, v4, v5, Astar.euclidianHeuristic);
 //     assertEquals(1.0, length, DELTA);
   }
-  
+
   @Test
   public void dijkstraAndAstar() {
-	
+
 }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
