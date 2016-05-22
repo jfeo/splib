@@ -4,16 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertNull;
 
-import java.util.Comparator;
 import splib.util.Pair;
+import splib.util.GraphCreator;
 import splib.algo.BidirectionalDijkstra;
+import splib.algo.Dijkstra;
 import splib.data.Graph;
 import splib.data.BDDVertex;
-import splib.data.BDDVertex;
+import splib.data.SPVertex;
 import splib.data.Vertex;
-import splib.util.MinBinaryHeap;
-import splib.util.ForwardComparator;
-import splib.util.BackwardComparator;
 
 public class TestBidirectionalDijkstra {
 
@@ -22,8 +20,6 @@ public class TestBidirectionalDijkstra {
   @Test
   public void test_singlePair() {
     Graph<BDDVertex> G = new Graph<BDDVertex>();
-    ForwardComparator fCompare = new ForwardComparator();
-    BackwardComparator bCompare = new BackwardComparator();;
 
     BDDVertex v1 = new BDDVertex();
     G.addVertex(v1);
@@ -46,33 +42,48 @@ public class TestBidirectionalDijkstra {
 
     double length;
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
-        new MinBinaryHeap<BDDVertex>(bCompare), G, v1, (BDDVertex)v2);
+    length = BidirectionalDijkstra.singlePair(G, v1, v2, 3);
     assertEquals(3.0, length, DELTA);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
-        new MinBinaryHeap<BDDVertex>(bCompare), G, v1, (BDDVertex)v4);
+    length = BidirectionalDijkstra.singlePair(G, v1, v4, 3);
     assertEquals(6.0, length, DELTA);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
-        new MinBinaryHeap<BDDVertex>(bCompare), G, v1, (BDDVertex)v5);
+    length = BidirectionalDijkstra.singlePair(G, v1, v5, 3);
     assertEquals(7.0, length, DELTA);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
-        new MinBinaryHeap<BDDVertex>(bCompare), G, v3, (BDDVertex)v5);
+    length = BidirectionalDijkstra.singlePair(G, v3, v5, 3);
     assertEquals(3.0, length, DELTA);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
-        new MinBinaryHeap<BDDVertex>(bCompare), G, v2, (BDDVertex)v4);
+    length = BidirectionalDijkstra.singlePair(G, v2, v4, 3);
     assertEquals(3.0, length, DELTA);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
-        new MinBinaryHeap<BDDVertex>(bCompare), G, v5, (BDDVertex)v2);
+    length = BidirectionalDijkstra.singlePair(G, v5, v2, 3);
     assertEquals(4.0, length, DELTA);
 
-    length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
-        new MinBinaryHeap<BDDVertex>(bCompare), G, v4, (BDDVertex)v5);
+    length = BidirectionalDijkstra.singlePair(G, v4, v5, 3);
     assertEquals(1.0, length, DELTA);
+  }
+
+  @Test
+  public void test_dijkstraCompare() throws IllegalAccessException, InstantiationException {
+    Graph<BDDVertex> G;
+    BDDVertex s, t;
+    Double length;
+
+    for (int i = 50; i <= 1000; i += 50) {
+      float p = 1.0f;
+      for (int j = 0; j < 10; j++) {
+        p = p / 10.0f;
+        System.out.println("Testing BDD on Erdos-Renyi(" + i + ", " + p + ")");
+        G = GraphCreator.erdosrenyi(BDDVertex.class, i, p);
+        s = G.getVertices().get(0);
+        t = G.getVertices().get(1);
+        length = BidirectionalDijkstra.<BDDVertex>singlePair(G, s, t, 4);
+        Dijkstra.<BDDVertex>singleSource(G, s, 4);
+        assertEquals(t.getEstimate(), length, DELTA);
+      }
+    }
+
   }
 
 }

@@ -8,7 +8,7 @@ import java.lang.Comparable;
 public class SPVertex extends Vertex {
 
   protected SPVertex pred;
-  protected double estimate;
+  protected Double estimate;
 
   public SPVertex(SPVertex pred, double estimate) {
     super();
@@ -30,7 +30,7 @@ public class SPVertex extends Vertex {
     this.pred = v;
   }
 
-  public double getEstimate() {
+  public Double getEstimate() {
     return this.estimate;
   }
 

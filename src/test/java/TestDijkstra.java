@@ -9,8 +9,6 @@ import splib.algo.Dijkstra;
 import splib.data.Graph;
 import splib.data.SPVertex;
 import splib.data.Vertex;
-import splib.util.MinBinaryHeap;
-import splib.util.ForwardComparator;
 
 public class TestDijkstra {
 
@@ -19,7 +17,6 @@ public class TestDijkstra {
   @Test
   public void test_singleSource() {
     Graph G = new Graph<SPVertex>();
-    ForwardComparator fCompare = new ForwardComparator();
 
     SPVertex v1 = new SPVertex();
     G.addVertex(v1);
@@ -40,7 +37,7 @@ public class TestDijkstra {
     G.addEdge(2, 3, 2.0);
     G.addEdge(3, 4, 1.0);
 
-    Dijkstra.singleSource(new MinBinaryHeap(fCompare), G, v1);
+    Dijkstra.singleSource(G, v1, 4);
 
     assertNull("Failure - v1 has a predecessor.", v1.getPredecessor());
     assertEquals("Failure - v1 is not predecessor of v2", v1, v2.getPredecessor());

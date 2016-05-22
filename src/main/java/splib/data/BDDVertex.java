@@ -9,7 +9,7 @@ import splib.data.Vertex;
 public class BDDVertex extends SPVertex {
 
   protected BDDVertex succ;
-  protected double succEstimate;
+  protected Double succEstimate;
 
   public BDDVertex() {
     super();
@@ -17,7 +17,7 @@ public class BDDVertex extends SPVertex {
     this.succ = null;
   }
 
-  public BDDVertex(double succEstimate, double estimate, BDDVertex succ, BDDVertex pred) {
+  public BDDVertex(Double succEstimate, Double estimate, BDDVertex succ, BDDVertex pred) {
     super(pred, estimate);
     this.succ = succ;
     this.succEstimate = succEstimate;
@@ -35,7 +35,7 @@ public class BDDVertex extends SPVertex {
     this.succEstimate = estimate;
   }
 
-  public double getSuccessorEstimate() {
+  public Double getSuccessorEstimate() {
     return this.succEstimate;
   }
 
