@@ -6,7 +6,9 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Comparator;
 import splib.util.Pair;
+import splib.util.GraphCreator;
 import splib.algo.BidirectionalDijkstra;
+import splib.algo.Dijkstra;
 import splib.data.Graph;
 import splib.data.BDDVertex;
 import splib.data.BDDVertex;
@@ -74,5 +76,31 @@ public class TestBidirectionalDijkstra {
         new MinBinaryHeap<BDDVertex>(bCompare), G, v4, (BDDVertex)v5);
     assertEquals(1.0, length, DELTA);
   }
+
+  @Test
+  public void test_dijkstraCompare() {
+    Graph<BDDVertex> G;
+    ForwardComparator fCompare = new ForwardComparator();
+    BackwardComparator bCompare = new BackwardComparator();;
+    BDDVertex s;
+    BDDVertex t;
+    double length;
+
+    for (int i = 100; i <= 1000; i += 100) {
+      float p = 1.0f;
+      for (int j = 0; j < 10; j++) {
+        p = p / 2.0f;
+        G = GraphCreator.erdosrenyi(BDDVertex.class, i, p);
+        s = G.getVertices().get(0);
+        t = G.getVertices().get(1);
+        System.out.println("Testing BDD vs Dijstra: erdosrenyi(" + i + ", " + p + ")");
+        length = BidirectionalDijkstra.singlePair(new MinBinaryHeap<BDDVertex>(fCompare),
+            new MinBinaryHeap<BDDVertex>(bCompare), G, s, t);
+        Dijkstra.singleSource(new MinBinaryHeap<BDDVertex>(fCompare), G, s);
+        assertEquals(t.getEstimate(), length, DELTA);
+      }
+    }
+  }
+
 
 }
