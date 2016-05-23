@@ -24,6 +24,48 @@ public class TestAstar {
   static private double DELTA = 1e-15;
 
   @Test
+  public void test_singlePair01() {
+    ForwardComparator<PlanarSPVertex> fCompare = new ForwardComparator();
+    Graph<PlanarSPVertex> G = new Graph<PlanarSPVertex>();
+    PlanarSPVertex v0 = new PlanarSPVertex(0.0, 0.0);
+    PlanarSPVertex v1 = new PlanarSPVertex(0.0, 3.0);
+    PlanarSPVertex v2 = new PlanarSPVertex(5.0, 0.0);
+    PlanarSPVertex v3 = new PlanarSPVertex(5.0, 3.0);
+    PlanarSPVertex v4 = new PlanarSPVertex(0.0, 6.0);
+    PlanarSPVertex v5 = new PlanarSPVertex(10.0, 6.0);
+    PlanarSPVertex v6 = new PlanarSPVertex(15.0, 6.0);
+    PlanarSPVertex v7 = new PlanarSPVertex(15.0, 9.0);
+    PlanarSPVertex v8 = new PlanarSPVertex(10.0, 9.0);
+
+    G.addVertex(v0);
+    G.addVertex(v1);
+    G.addVertex(v2);
+    G.addVertex(v3);
+    G.addVertex(v4);
+    G.addVertex(v5);
+    G.addVertex(v6);
+    G.addVertex(v7);
+    G.addVertex(v8);
+
+    G.addEdge(0, 1, 3.0);
+    G.addEdge(1, 3, 5.0);
+    G.addEdge(2, 3, 3.0);
+    G.addEdge(1, 4, 3.0);
+    G.addEdge(4, 5, 10.0);
+    G.addEdge(5, 6, 5.0);
+    G.addEdge(6, 7, 3.0);
+    G.addEdge(7, 8, 5.0);
+    G.addEdge(8, 5, 3.0);
+
+
+    double length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(
+          new Astar.AstarComparator(v8, Astar::euclidianHeuristic)), G, v0, v8,
+          Astar::euclidianHeuristic);
+    Dijkstra.singleSource(new MinBinaryHeap<PlanarSPVertex>(fCompare), G, v0);
+    assertEquals(v8.getEstimate(), length, DELTA);
+  }
+
+  @Test
   public void test_singlePair() {
     double length;
     Graph<PlanarSPVertex> G;
