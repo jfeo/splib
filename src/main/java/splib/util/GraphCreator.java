@@ -59,6 +59,33 @@ public class GraphCreator {
 
 
   /**
+   * Generate a complete graph, with the given number of vertices.
+   * @param n The number of vertices in the graph.
+   * @return The graph.
+   */
+  public static <V extends SPVertex> Graph<V> completeGeneric(Class <V> vClass, int n) {
+    Graph<V> G = new Graph();
+    Random random = new Random();
+
+    for (int i = 0; i < n; i++) {
+      try {
+        G.addVertex(vClass.newInstance());
+      } catch (Exception e) {
+        return null;
+      }
+    }
+
+    for (int i = 0; i < n; i++) {
+      for (int j = i+1; j < n; j++) {
+        G.addEdge(i, j, random.nextInt(9) + 1);
+      }
+    }
+
+    return G;
+  }
+
+
+  /**
    * Generate a graph according to the Erdős–Rényi random graph model.
    * @param n The number of vertices.
    * @param p The probability of including a given edge.
@@ -86,6 +113,38 @@ public class GraphCreator {
     return G;
   }
 
+
+  /**
+   * Generate a graph according to the Erdős–Rényi random graph model.
+   * @param n The number of vertices.
+   * @param p The probability of including a given edge.
+   */
+  public static <V extends SPVertex> Graph<V> erdosrenyi(Class<V> vClass, int n, float p) {
+    if (p < 0.0f || p > 1.0f) {
+      throw new RuntimeException();
+    }
+
+    Graph<V> G = new Graph();
+    Random random = new Random();
+
+    try {
+      for (int i = 0; i < n; i++) {
+        G.addVertex(vClass.newInstance());
+      }
+    } catch (Exception e) {
+      return null;
+    }
+
+    for (int i = 0; i < n; i++) {
+      for (int j = i+1; j < n; j++) {
+        if (random.nextFloat() < p) {
+          G.addEdge(i, j, random.nextInt(9) + 1);
+        }
+      }
+    }
+
+    return G;
+  }
   private static class VertexDistanceComparator<D extends Pair<PlanarSPVertex, Double>>
       implements Comparator<D> {
     public int compare(D v, D u) {
