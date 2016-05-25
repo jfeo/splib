@@ -36,7 +36,7 @@ public class BidirectionalDijkstra {
     Qt.insert(t);
 
     // Continue, while the minimum elements of the two queues, are not identical
-    while (Qs.top() != Qt.top()) {
+    while (!Qs.isEmpty() && !Qt.isEmpty() && Qs.top() != Qt.top()) {
 
       V u = (V)Qs.extract();
       Ss.add(u);
@@ -53,10 +53,10 @@ public class BidirectionalDijkstra {
       }
 
       if (u == t){
-        return u.getEstimate();
+        break;
       }
       if (u == Qt.top()) {
-        return u.getEstimate() + Qt.top().getSuccessorEstimate();
+        break;
       }
 
       u = (V)Qt.extract();
@@ -67,22 +67,39 @@ public class BidirectionalDijkstra {
       }
 
       if (u == s) {
-        return u.getSuccessorEstimate();
+        break;
       }
       if (u == Qs.top()) {
-        return u.getSuccessorEstimate() + Qs.top().getEstimate();
+        break;
+
       }
+    }
+
+    if (Qs.top() == null || Qt.top() == null) {
+      return 1.0d / 0.0f;
     }
 
     // Check if the shortest path found, is in the best shortest path
     double bestPath = Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
-    for (V v : Ss){
+    for (BDDVertex v : Ss) {
       if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
         bestPath = v.getEstimate() + v.getSuccessorEstimate();
       }
     }
 
-    for (V v : St){
+    for (BDDVertex v : St){
+      if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
+        bestPath = v.getEstimate() + v.getSuccessorEstimate();
+      }
+    }
+
+    for (BDDVertex v : Qs.getHeap().getElements()) {
+      if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
+        bestPath = v.getEstimate() + v.getSuccessorEstimate();
+      }
+    }
+
+    for (BDDVertex v : Qt.getHeap().getElements()) {
       if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
         bestPath = v.getEstimate() + v.getSuccessorEstimate();
       }

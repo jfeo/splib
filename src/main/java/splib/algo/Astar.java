@@ -60,12 +60,13 @@ public class Astar {
         }
         Astar.relax(h, open, u, (V)v.getItem1(), t, v.getItem2());
         if (v.getItem1() == t) {
-          return t.getEstimate();
+          break;
         }
       }
 
       u.Close();
     }
+
     return t.getEstimate();
   }
 
@@ -99,7 +100,7 @@ public class Astar {
       double weight) {
     double newEstimate = u.getEstimate() + weight;
     if (v.getEstimate() + h.heuristic(v, t) > newEstimate + h.heuristic(v, t)) {
-      if (v.getPredecessor() == null) {
+      if (open.indexOf(v) == null) {
         v.setPredecessor(u);
         v.setEstimate(newEstimate);
         open.insert(v);
