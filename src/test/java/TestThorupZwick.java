@@ -41,7 +41,7 @@ public class TestThorupZwick {
     G.addEdge(2, 3, 2.0);
     G.addEdge(3, 4, 1.0);
 
-    ThorupZwick tz = new ThorupZwick(3, G, new MinBinaryHeap<TZSPVertex>(new ForwardComparator<TZSPVertex>()));
+    ThorupZwick tz = new ThorupZwick(k, G, new MinBinaryHeap<TZSPVertex>(new ForwardComparator<TZSPVertex>()));
   }
 
 }

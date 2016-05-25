@@ -35,24 +35,23 @@ public class ThorupZwick {
     this.C = new HashMap<TZSPVertex, ArrayList<TZSPVertex>>();
     this.preprocess();
     System.out.println("Done preprocessing!");
-  }	
+  }
   /**
    * Preprocess a graph.
    */
   public void preprocess() {
     this.A.add(new ArrayList<TZSPVertex>());
     this.A.get(0).addAll(this.G.getVertices());
-  
 
     // Compute i-centers
-    for (int i = 1; i < k; i++) {
+    for (int i = 1; i < this.k; i++) {
       this.A.add(new ArrayList<TZSPVertex>());
 
       ArrayList<TZSPVertex> preA = this.A.get(i-1);
       ArrayList<TZSPVertex> curA = this.A.get(i);
 
       for (TZSPVertex v : preA) {
-        if (Math.random() < Math.pow(curA.size(), - 1 / (double)k)) {
+        if (Math.random() < Math.pow(curA.size(), - 1 / (double)this.k)) {
           curA.add(v);
         }
       }
@@ -79,7 +78,7 @@ public class ThorupZwick {
         	while (witness != null && witness.getWitness(i).getItem1() != witness) {
         		witness = (TZSPVertex)witness.getPredecessor();
         	}
-            v.setWitness(i, witness, v.getEstimate());	
+            v.setWitness(i, witness, v.getEstimate());
     	}
       }
       this.G.removeVertex(s);
