@@ -14,6 +14,7 @@ import java.util.Comparator;
 
 import java.lang.Math;
 import java.io.File;
+import java.io.PrintWriter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -86,57 +87,123 @@ public class GraphCreator {
    return G;
  }
 
+  public static <V extends SPVertex> void dumpTestSvg(double scale, String path, Graph<V> G,
+      ArrayList<Pair<Double, Double>> positions, V s, V t, ArrayList<V> p1, ArrayList<V> p2, V z) {
+
+    double ratio = 1000d / scale;
+
+    try {
+      PrintWriter writer = new PrintWriter(path, "UTF-8");
+      writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
+      writer.println("<svg xmlns:svg=\"http://www.w3.org/2000/svg\"");
+      writer.println("xmlns=\"http://www.w3.org/2000/svg\"");
+      writer.println("width=\"1000px\" height=\"1000px\" version=\"1.1\">");
+
+      for (int i = 0; i < G.getVertices().size(); i++) {
+        for (Pair<Vertex, Double> adj : G.getVertices().get(i).getAdjacency()) {
+          int j = G.getVertices().indexOf((V)adj.getItem1());
+          writer.println(String.format("<path d=\"M %1$.3f %2$.3f L %3$.3f %4$.3f\" stroke=\"black\" stroke-width=\"0.1\" fill=\"none\" />",
+                positions.get(j).getItem1() * ratio,
+                positions.get(j).getItem2() * ratio,
+                positions.get(i).getItem1() * ratio,
+                positions.get(i).getItem2() * ratio));
+        }
+        if (G.getVertices().get(i).getPredecessor() == null) {
+          writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"2\" fill=\"blue\"/>",
+              positions.get(i).getItem1() * ratio,
+              positions.get(i).getItem2() * ratio));
+        } else {
+          writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"2\" fill=\"cyan\"/>",
+              positions.get(i).getItem1() * ratio,
+              positions.get(i).getItem2() * ratio));
+        }
+      }
+
+
+      writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"7\"  stroke-widt=\"5\" stroke=\"lime\" fill=\"orange\"/>", positions.get(G.getVertices().indexOf(s)).getItem1() * ratio , positions.get(G.getVertices().indexOf(s)).getItem2() * ratio));
+      writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"7\" stroke-widt=\"5\" stroke=\"red\" fill=\"yellow\"/>", positions.get(G.getVertices().indexOf(t)).getItem1() * ratio , positions.get(G.getVertices().indexOf(t)).getItem2() * ratio ));
+
+      for (V v : p1) {
+        writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"10\"  stroke-width=\"1\" stroke=\"magenta\" fill=\"none\"/>", positions.get(G.getVertices().indexOf(v)).getItem1() * ratio , positions.get(G.getVertices().indexOf(v)).getItem2() * ratio ));
+      }
+
+      for (V v : p2) {
+        writer.println(String.format("<rect x=\"%1$.3f\" y=\"%2$.3f\" width=\"20\" height=\"20\" stroke-width=\"1\" stroke=\"brown\" fill=\"none\"/>", positions.get(G.getVertices().indexOf(v)).getItem1() * ratio  - 10, positions.get(G.getVertices().indexOf(v)).getItem2() * ratio  - 10));
+      }
+
+      if (z != null)
+        writer.println(String.format("<rect x=\"%1$.3f\" y=\"%2$.3f\" width=\"30\" height=\"30\" stroke-width=\"1\" stroke=\"yellow\" fill=\"none\"/>", positions.get(G.getVertices().indexOf(z)).getItem1() * ratio  - 15, positions.get(G.getVertices().indexOf(z)).getItem2() * ratio  - 15));
+
+      writer.println("</svg>");
+      writer.close();
+    } catch (Exception e) {
+      System.out.println("Failed saving graph: " + e.toString());
+    }
+  }
+
 
  /**
   * Build a planar graph.
   * @param V The number of vertices.
   * @return The generated graph.
   */
- public static Graph<PlanarSPVertex> planar(int V, int degree) {
-   Graph<PlanarSPVertex> G = new Graph<PlanarSPVertex>();
-   Random random = new Random();
-   for (int i = 0; i < V; i++) {
-     PlanarSPVertex v = new PlanarSPVertex(random.nextDouble(),
-         random.nextDouble());
-     G.addVertex(v);
-   }
-   for (PlanarSPVertex v : (ArrayList<PlanarSPVertex>)G.getVertices()) {
-     // We work with squared distances for simplicity
-     Heap<Pair<PlanarSPVertex, Double>> sqdists =
-       new Heap<Pair<PlanarSPVertex, Double>>((p1, p2) ->
-           p1.getItem2().compareTo(p2.getItem2()), 2);
+  public static <V extends SPVertex> Pair<Graph<V>, ArrayList<Pair<Double, Double>>> planar(Class<V> vClass, double scale, int n, int degree)
+    throws InstantiationException, IllegalAccessException {
+    Graph<V> G = new Graph<V>();
+    ArrayList<Pair<Double, Double>> positions = new ArrayList();
+    Random random = new Random();
 
-    for (PlanarSPVertex u : (ArrayList<PlanarSPVertex>)G.getVertices()) {
-      double sqd = Math.pow(v.getPosition().getItem1()
-                          - u.getPosition().getItem1(), 2)
-                 + Math.pow(v.getPosition().getItem2()
-                          - u.getPosition().getItem2(), 2);
-      sqdists.insert(new Pair((PlanarSPVertex)u, Math.sqrt(sqd)));
-     }
+    for (int i = 0; i < n; i++) {
+      V v = vClass.newInstance();
+      Pair<Double, Double> position = new Pair(random.nextDouble() * scale, random.nextDouble() * scale);
+      positions.add(position);
+      if (vClass.isAssignableFrom(PlanarSPVertex.class)) {
+        ((PlanarSPVertex)v).setPosition(position.getItem1(), position.getItem2());
+      }
+      G.addVertex(v);
+    }
 
-     for (int i = v.getAdjacency().size(); i < degree; i++) {
-       Pair<PlanarSPVertex, Double> d;
+    for (int i = 0; i < G.getVertices().size(); i++) {
+      V v = (V)G.getVertices().get(i);
+      Pair<Double, Double> vPos = positions.get(i);
+      // We work with squared distances for simplicity
+      Heap<Pair<V, Double>> sqdists =
+        new Heap<Pair<V, Double>>((p1, p2) ->
+          p1.getItem2().compareTo(p2.getItem2()), 2);
 
-       // add only new edges
-       boolean exists = true;
-       while (exists) {
-         d = sqdists.extract();
-         if (d.getItem1() == v) {
-           continue;
-         }
-         exists = false;
-         for (Pair<Vertex, Double> adj : v.getAdjacency()) {
-           exists = exists || (PlanarSPVertex)adj.getItem1() == d.getItem1();
-         }
-         if (!exists) {
-           G.addEdge(v, d.getItem1(), d.getItem2());
-         }
-       }
-     }
-   }
+      for (int j = 0; j < G.getVertices().size(); j++) {
+        V u = (V)G.getVertices().get(j);
+        Pair<Double, Double> uPos = positions.get(j);
+        double sqd = Math.pow(vPos.getItem1()
+                            - uPos.getItem1(), 2)
+                   + Math.pow(vPos.getItem2()
+                            - uPos.getItem2(), 2);
+        sqdists.insert(new Pair(u, Math.sqrt(sqd)));
+      }
 
-   return G;
- }
+      for (int j = v.getAdjacency().size(); j < degree; j++) {
+        Pair<V, Double> d;
+
+        // add only new edges
+        boolean exists = true;
+        while (exists) {
+          d = sqdists.extract();
+          if (d.getItem1() == v) {
+            continue;
+          }
+          exists = false;
+          for (Pair<Vertex, Double> adj : v.getAdjacency()) {
+            exists = exists || (V)adj.getItem1() == d.getItem1();
+          }
+          if (!exists) {
+            G.addEdge(v, d.getItem1(), d.getItem2());
+          }
+        }
+      }
+    }
+
+    return new Pair(G, positions);
+  }
 
 
 //  /**
