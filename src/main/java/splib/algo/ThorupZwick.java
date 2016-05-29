@@ -33,8 +33,8 @@ public class ThorupZwick <V extends TZSPVertex> {
     this.B = new HashMap<V, ArrayList<V>>();
     this.C = new HashMap<V, ArrayList<V>>();
     this.preprocess();
-    System.out.println("Done preprocessing!");
   }
+
   /**
    * Preprocess a graph.
    */
