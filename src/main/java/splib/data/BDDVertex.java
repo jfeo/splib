@@ -8,19 +8,31 @@ import splib.data.Vertex;
 
 public class BDDVertex extends SPVertex {
 
+  public enum Status {
+    NotQueued,
+    Queued,
+    HasBeenQueued
+  }
+
   protected BDDVertex succ;
-  protected double succEstimate;
+  protected Double succEstimate;
+  protected Status sstatus;
+  protected Status tstatus;
 
   public BDDVertex() {
     super();
     this.succEstimate = 1.0d / 0.0d; // Infinity
     this.succ = null;
+    this.sstatus = Status.NotQueued;
+    this.tstatus = Status.NotQueued;
   }
 
-  public BDDVertex(double succEstimate, double estimate, BDDVertex succ, BDDVertex pred) {
+  public BDDVertex(Double succEstimate, Double estimate, BDDVertex succ, BDDVertex pred) {
     super(pred, estimate);
     this.succ = succ;
     this.succEstimate = succEstimate;
+    this.sstatus = Status.NotQueued;
+    this.tstatus = Status.NotQueued;
   }
 
   public void setSuccessor(BDDVertex succ) {
@@ -35,8 +47,23 @@ public class BDDVertex extends SPVertex {
     this.succEstimate = estimate;
   }
 
-  public double getSuccessorEstimate() {
+  public Double getSuccessorEstimate() {
     return this.succEstimate;
   }
 
+  public void setSourceStatus(Status s) {
+    this.sstatus = s;
+  }
+
+  public Status getSourceStatus() {
+    return this.sstatus;
+  }
+
+  public void setTargetStatus(Status s) {
+    this.tstatus = s;
+  }
+
+  public Status getTargetStatus() {
+    return this.tstatus;
+  }
 }

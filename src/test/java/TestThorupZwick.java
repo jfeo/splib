@@ -7,11 +7,10 @@ import static org.junit.Assert.assertNull;
 import java.util.Comparator;
 import splib.util.Pair;
 import splib.algo.ThorupZwick;
-import splib.util.ForwardComparator;
 import splib.data.Graph;
 import splib.data.TZSPVertex;
 import splib.data.Vertex;
-import splib.util.MinBinaryHeap;
+import splib.util.Heap;
 
 public class TestThorupZwick {
 
@@ -41,7 +40,7 @@ public class TestThorupZwick {
     G.addEdge(2, 3, 2.0);
     G.addEdge(3, 4, 1.0);
 
-    ThorupZwick tz = new ThorupZwick(k, G, new MinBinaryHeap<TZSPVertex>(new ForwardComparator<TZSPVertex>()));
+    ThorupZwick tz = new ThorupZwick(k, G, 4);
   }
 
 }

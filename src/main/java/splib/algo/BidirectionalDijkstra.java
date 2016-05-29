@@ -3,9 +3,10 @@ package splib.algo;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import splib.data.*;
+import splib.data.Graph;
+import splib.data.Vertex;
+import splib.data.BDDVertex;;
 import splib.util.Heap;
-import splib.util.PriorityQueue;
 import splib.util.Pair;
 
 
@@ -17,96 +18,78 @@ public class BidirectionalDijkstra {
 
   /**
    *  Single pair bidirectional Dijkstra.
-   *  @param hs A heap for the forward search.
-   *  @param ht A heap for the backwards search.
    *  @param G The graph to perform the search on.
    *  @param s The source vertex.
    *  @param t The target vertex.
    *  @return ...
    */
-  public static Double singlePair(Heap<BDDVertex> hs, Heap<BDDVertex> ht,
-      Graph<BDDVertex> G, BDDVertex s, BDDVertex t) {
+  public static <V extends BDDVertex> Pair<Double, V> singlePair(Graph<V> G, V s, V t, int heapArity) {
     BidirectionalDijkstra.initializeSinglePair(G, s, t);
-    PriorityQueue<BDDVertex> Qs = new PriorityQueue<BDDVertex>(hs);
-    PriorityQueue<BDDVertex> Qt = new PriorityQueue<BDDVertex>(ht);
-    ArrayList<BDDVertex> Ss = new ArrayList<BDDVertex>();
-    ArrayList<BDDVertex> St = new ArrayList<BDDVertex>();
+    Heap<BDDVertex> Qs = new Heap<BDDVertex>((v, u) ->
+        v.getEstimate().compareTo(u.getEstimate()), heapArity);
+    Heap<BDDVertex> Qt = new Heap<BDDVertex>((v, u) ->
+        v.getSuccessorEstimate().compareTo(u.getSuccessorEstimate()), heapArity);
+    ArrayList<V> Ss = new ArrayList<V>();
+    ArrayList<V> St = new ArrayList<V>();
 
+    s.setSourceStatus(BDDVertex.Status.Queued);
     Qs.insert(s);
+    t.setTargetStatus(BDDVertex.Status.Queued);
     Qt.insert(t);
 
     // Continue, while the minimum elements of the two queues, are not identical
-    while (!Qs.isEmpty() && !Qt.isEmpty() && Qs.top() != Qt.top()) {
+    while (!Qs.isEmpty() || !Qt.isEmpty()) {
+      V u;
+      if (!Qs.isEmpty()) {
+        u = (V)Qs.extract();
+        u.setSourceStatus(BDDVertex.Status.HasBeenQueued);
+        Ss.add(u);
+        if (u.getTargetStatus() == BDDVertex.Status.HasBeenQueued) {
+          break;
+        }
 
-      BDDVertex u = Qs.extract();
-      Ss.add(u);
-
-      for (Pair<Vertex, Double> v : u.getAdjacency()) {
-        Dijkstra.relax(Qs, u, (BDDVertex)v.getItem1(), v.getItem2());
+        for (Pair<Vertex, Double> v : u.getAdjacency()) {
+          BidirectionalDijkstra.relaxSource(Qs, u, (V)v.getItem1(), v.getItem2());
+        }
       }
 
-      if (u == t){
-        break;
-      }
-      if (u == Qt.top()) {
-        break;
-      }
+      if (!Qt.isEmpty()) {
+        u = (V)Qt.extract();
+        u.setTargetStatus(BDDVertex.Status.HasBeenQueued);
+        St.add(u);
+        if (u.getSourceStatus() == BDDVertex.Status.HasBeenQueued) {
+          break;
+        }
 
-      u = Qt.extract();
-      St.add(u);
-
-      for (Pair<Vertex, Double> v : u.getAdjacency()) {
-        BidirectionalDijkstra.relax(Qt, u, (BDDVertex)v.getItem1(), v.getItem2());
-      }
-
-      if (u == s) {
-        break;
-      }
-      if (u == Qs.top()) {
-        break;
-
+        for (Pair<Vertex, Double> v : u.getAdjacency()) {
+          BidirectionalDijkstra.relaxTarget(Qt, u, (V)v.getItem1(), v.getItem2());
+        }
       }
     }
 
     if (Qs.top() == null || Qt.top() == null) {
-      return 1.0d / 0.0f;
+      return new Pair(1.0d / 0.0f, null);
     }
 
     // Check if the shortest path found, is in the best shortest path
-    double bestPath = Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
-    for (BDDVertex v : Ss) {
-      if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
+    double bestPath = s.getSuccessorEstimate();
+    V bestV = s;
+    for (BDDVertex v : G.getVertices()) {
+      if (v.getEstimate() + v.getSuccessorEstimate() <= bestPath) {
         bestPath = v.getEstimate() + v.getSuccessorEstimate();
+        bestV = (V)v;
       }
     }
 
-    for (BDDVertex v : St){
-      if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
-        bestPath = v.getEstimate() + v.getSuccessorEstimate();
-      }
-    }
-
-    // for (BDDVertex v : Qs.getHeap().getElements()) {
-    //   if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
-    //     bestPath = v.getEstimate() + v.getSuccessorEstimate();
-    //   }
-    // }
-
-    // for (BDDVertex v : Qt.getHeap().getElements()) {
-    //   if (v.getEstimate() + v.getSuccessorEstimate() < bestPath) {
-    //     bestPath = v.getEstimate() + v.getSuccessorEstimate();
-    //   }
-    // }
-
-    return bestPath;
+    return new Pair(bestPath, bestV);
   }
 
 
   /**
    * Initialize the graph.
    */
-  private static void initializeSinglePair(Graph<BDDVertex> G, BDDVertex s, BDDVertex t){
-    for (BDDVertex v : G.getVertices()){
+  private static <V extends BDDVertex> void initializeSinglePair(Graph<V> G, V s, V t) {
+    for (V v : G.getVertices()){
       v.setEstimate(1.0d / 0.0d); // Infinity
       v.setSuccessorEstimate(1.0d / 0.0d); // Infinity
       v.setPredecessor(null);
@@ -123,28 +106,33 @@ public class BidirectionalDijkstra {
    * @param v The end vertex.
    * @param weight The weight of the edge.
    */
-  public static void relax(PriorityQueue<BDDVertex> Q,
-      BDDVertex u, BDDVertex v, double weight) {
+  public static <V extends BDDVertex> void relaxTarget(Heap<V> Q, V u, V v, double weight) {
     double newEstimate = u.getSuccessorEstimate() + weight;
     if (v.getSuccessorEstimate() > newEstimate) {
       v.setSuccessor(u);
       v.setSuccessorEstimate(newEstimate);
-      Q.insert(v);
+      if (v.getTargetStatus() == BDDVertex.Status.Queued) {
+        Q.changeKey(v);
+      } else {
+        v.setTargetStatus(BDDVertex.Status.Queued);
+        Q.insert(v);
+      }
     }
   }
 
 
-  private static Double checkShortestPath(ArrayList<BDDVertex> S,
-      PriorityQueue<BDDVertex> Qs, PriorityQueue<BDDVertex> Qt) {
-    double bestPath = Qs.top().getEstimate() + Qt.top().getSuccessorEstimate();
-    S.removeAll(Collections.singleton(null));
-    for (BDDVertex v : S) {
-      if (v.getEstimate() < bestPath) {
-        bestPath = v.getEstimate();
+  public static <V extends BDDVertex> void relaxSource(Heap<V> Q, V u, V v, double weight) {
+    double newEstimate = u.getEstimate() + weight;
+    if (v.getEstimate() > newEstimate) {
+      v.setPredecessor(u);
+      v.setEstimate(newEstimate);
+      if (v.getSourceStatus() == BDDVertex.Status.Queued) {
+        Q.changeKey(v);
+      } else {
+        v.setSourceStatus(BDDVertex.Status.Queued);
+        Q.insert(v);
       }
     }
-
-    return bestPath;
   }
 
 
