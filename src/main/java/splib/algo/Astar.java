@@ -49,8 +49,9 @@ public class Astar {
     open.insert(s);
 
     // Relax edges adjacent to the minimum estimate distance vertex
-    while (!open.isEmpty()) {
+    while (open.top() != t && !open.isEmpty()) {
       V u = (V)open.extract();
+      u.Close();
 
       for (Pair<Vertex, Double> v : u.getAdjacency()) {
         // prevent overwriting previous estimates/predecessors
@@ -63,8 +64,6 @@ public class Astar {
           break;
         }
       }
-
-      u.Close();
     }
 
     return t.getEstimate();
@@ -99,17 +98,29 @@ public class Astar {
       V u, V v, V t,
       double weight) {
     double newEstimate = u.getEstimate() + weight;
-    if (v.getEstimate() + h.heuristic(v, t) > newEstimate + h.heuristic(v, t)) {
-      if (open.indexOf(v) == null) {
-        v.setPredecessor(u);
-        v.setEstimate(newEstimate);
-        open.insert(v);
-      } else {
-        v.setPredecessor(u);
-        v.setEstimate(newEstimate);
-        open.changeKey(v);
-      }
+    if (v.isOpen() && v.getEstimate() + h.heuristic(v, t) < newEstimate + h.heuristic(v, t))    {
+      // skip
+    } else if (v.isClosed() && v.getEstimate() + h.heuristic(v, t) < newEstimate + h.heuristic(v, t)) {
+      // skip
+    } else {
+      v.setPredecessor(u);
+      v.setEstimate(newEstimate);
+      v.Open();
+      open.insert(v);
     }
+
+    // if (v.getEstimate() + h.heuristic(v, t) > newEstimate + h.heuristic(v, t)) {
+    //   if (!v.isClosed() && !v.isOpen()) {
+    //     v.setPredecessor(u);
+    //     v.setEstimate(newEstimate);
+    //     v.Open();
+    //     open.insert(v);
+    //   } else if (v.isOpen()) {
+    //     v.setPredecessor(u);
+    //     v.setEstimate(newEstimate);
+    //     open.changeKey(v);
+    //   }
+    // }
   }
 
   public static <V extends PlanarSPVertex> double euclidianHeuristic(V u, V v) {
