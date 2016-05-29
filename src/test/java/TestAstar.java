@@ -1,10 +1,12 @@
 import org.junit.Test;
 import org.junit.Ignore;
+import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertNull;
 
 import java.util.Comparator;
+import java.util.ArrayList;
 
 import splib.util.GraphCreator;
 import splib.util.Pair;
@@ -24,66 +26,51 @@ public class TestAstar {
   static private double DELTA = 1e-15;
 
   @Test
-  public void test_singlePair01() {
-    ForwardComparator<PlanarSPVertex> fCompare = new ForwardComparator();
-    Graph<PlanarSPVertex> G = new Graph<PlanarSPVertex>();
-    PlanarSPVertex v0 = new PlanarSPVertex(0.0, 0.0);
-    PlanarSPVertex v1 = new PlanarSPVertex(0.0, 3.0);
-    PlanarSPVertex v2 = new PlanarSPVertex(5.0, 0.0);
-    PlanarSPVertex v3 = new PlanarSPVertex(5.0, 3.0);
-    PlanarSPVertex v4 = new PlanarSPVertex(0.0, 6.0);
-    PlanarSPVertex v5 = new PlanarSPVertex(10.0, 6.0);
-    PlanarSPVertex v6 = new PlanarSPVertex(15.0, 6.0);
-    PlanarSPVertex v7 = new PlanarSPVertex(15.0, 9.0);
-    PlanarSPVertex v8 = new PlanarSPVertex(10.0, 9.0);
-
-    G.addVertex(v0);
-    G.addVertex(v1);
-    G.addVertex(v2);
-    G.addVertex(v3);
-    G.addVertex(v4);
-    G.addVertex(v5);
-    G.addVertex(v6);
-    G.addVertex(v7);
-    G.addVertex(v8);
-
-    G.addEdge(0, 1, 3.0);
-    G.addEdge(1, 3, 5.0);
-    G.addEdge(2, 3, 3.0);
-    G.addEdge(1, 4, 3.0);
-    G.addEdge(4, 5, 10.0);
-    G.addEdge(5, 6, 5.0);
-    G.addEdge(6, 7, 3.0);
-    G.addEdge(7, 8, 5.0);
-    G.addEdge(8, 5, 3.0);
-
-
-    double length = Astar.singlePair(new MinBinaryHeap<PlanarSPVertex>(
-          new Astar.AstarComparator(v8, Astar::euclidianHeuristic)), G, v0, v8,
-          Astar::euclidianHeuristic);
-    Dijkstra.singleSource(new MinBinaryHeap<PlanarSPVertex>(fCompare), G, v0);
-    assertEquals(v8.getEstimate(), length, DELTA);
-  }
-
-  @Test
-  public void test_singlePair() {
-    double length;
+  public void test_dijkstraCompare() throws IllegalAccessException, InstantiationException {
     Graph<PlanarSPVertex> G;
-    PlanarSPVertex t;
-    PlanarSPVertex s;
+    PlanarSPVertex s, t;
+    double astarDistance;
+    double dijkstraDistance;
 
-    // Test case
-    for (int i = 50; i <= 1000; i += 50) {
-      for (int d = 3; d <= i / 3; d++) {
-        System.out.printf("Testing A* on graph with %d vertices and a degree of %d\n", i, d);
-        G = GraphCreator.planar(i, d);
+    int num = 1;
+    for (int i = 200; i <= 1000; i += 200) {
+      for (int d = 4; d < 16; d += 4) {
+        Pair<Graph<PlanarSPVertex>, ArrayList<Pair<Double, Double>>> planar = GraphCreator.planar(PlanarSPVertex.class, 100, i, d);
+        G = planar.getItem1();
         s = G.getVertices().get(0);
         t = G.getVertices().get(1);
-        length = Astar.singlePair(G, s, t, Astar::euclidianHeuristic, 4);
+
         Dijkstra.<PlanarSPVertex>singleSource(G, s, 4);
-        assertEquals(t.getEstimate(), length, DELTA);
+        ArrayList<PlanarSPVertex> dijkstraPath = new ArrayList();
+        PlanarSPVertex v = t;
+        while (v != null) {
+          dijkstraPath.add(v);
+          v = (PlanarSPVertex)v.getPredecessor();
+        }
+        dijkstraDistance = t.getEstimate();
+
+        Dijkstra.initializeSingleSource(G, s);
+
+
+        astarDistance = Astar.<PlanarSPVertex>singlePair(G, s, t, Astar::euclidianHeuristic, 4);
+        // Generate path as list of vertices
+        ArrayList<PlanarSPVertex> astarPath = new ArrayList();
+        v = t;
+        while (v != null) {
+          astarPath.add(v);
+          v = (PlanarSPVertex)v.getPredecessor();
+        }
+
+        if (Math.abs(dijkstraDistance - astarDistance) > DELTA) {
+          GraphCreator.<PlanarSPVertex>dumpTestSvg(100, "astar_test_graph_fail_"+num+".svg", G, planar.getItem2(), s, t, astarPath, dijkstraPath, null);
+        } else {
+          GraphCreator.<PlanarSPVertex>dumpTestSvg(100, "astar_test_graph_success_"+num+".svg", G, planar.getItem2(), s, t, astarPath, dijkstraPath, null);
+        }
+        num++;
+        assertEquals(dijkstraDistance, astarDistance, DELTA);
       }
     }
+
   }
 
 
