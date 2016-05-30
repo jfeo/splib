@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Comparator;
 import java.util.ArrayList;
+import java.awt.Color;
 
 import splib.util.GraphCreator;
 import splib.util.Pair;
@@ -19,16 +20,10 @@ import splib.data.Vertex;
 
 public class TestAstar {
 
-  public void pointprint(PlanarSPVertex v) {
-    System.out.println(v.getPosition().getItem1() + ", " + v.getPosition().getItem2());
-  }
-
   static private double DELTA = 1e-15;
 
   @Test
   public void test_dijkstraCompare() throws IllegalAccessException, InstantiationException {
-    Graph<PlanarSPVertex> G;
-    PlanarSPVertex s, t;
     double astarDistance;
     double dijkstraDistance;
 
@@ -36,21 +31,20 @@ public class TestAstar {
     for (int i = 200; i <= 1000; i += 200) {
       for (int d = 4; d < 16; d += 4) {
         Pair<Graph<PlanarSPVertex>, ArrayList<Pair<Double, Double>>> planar = GraphCreator.planar(PlanarSPVertex.class, 100, i, d);
-        G = planar.getItem1();
-        s = G.getVertices().get(0);
-        t = G.getVertices().get(1);
+        Graph<PlanarSPVertex> G = planar.getItem1();
+        PlanarSPVertex s = G.getVertices().get(0);
+        PlanarSPVertex t = G.getVertices().get(1);
 
         Dijkstra.<PlanarSPVertex>singleSource(G, s, 4);
         ArrayList<PlanarSPVertex> dijkstraPath = new ArrayList();
+
+        // Extract the path found by Dijkstra
         PlanarSPVertex v = t;
         while (v != null) {
           dijkstraPath.add(v);
           v = (PlanarSPVertex)v.getPredecessor();
         }
         dijkstraDistance = t.getEstimate();
-
-        Dijkstra.initializeSingleSource(G, s);
-
 
         astarDistance = Astar.<PlanarSPVertex>singlePair(G, s, t, Astar::euclidianHeuristic, 4);
         // Generate path as list of vertices
@@ -61,11 +55,22 @@ public class TestAstar {
           v = (PlanarSPVertex)v.getPredecessor();
         }
 
+        // Graph dumping
+        String filename;
         if (Math.abs(dijkstraDistance - astarDistance) > DELTA) {
-          GraphCreator.<PlanarSPVertex>dumpTestSvg(100, "astar_test_graph_fail_"+num+".svg", G, planar.getItem2(), s, t, astarPath, dijkstraPath, null);
+          filename = "astar_test_graph_failure_"+num+".svg";
         } else {
-          GraphCreator.<PlanarSPVertex>dumpTestSvg(100, "astar_test_graph_success_"+num+".svg", G, planar.getItem2(), s, t, astarPath, dijkstraPath, null);
+          filename = "astar_test_graph_success_"+num+".svg";
         }
+
+        GraphCreator.<PlanarSPVertex>graphSVG(100, filename, G, planar.getItem2(),
+          new GraphCreator.SVGElement("circle", null, Color.black, 1d, 2d),
+          new Pair(new GraphCreator.SVGElement("circle", Color.black, Color.yellow, 1d, 3d),
+            new ArrayList(){{add(s);}}),
+          new Pair(new GraphCreator.SVGElement("circle", Color.black, Color.red, 1d, 3d),
+            new ArrayList(){{add(t);}}),
+          new Pair(new GraphCreator.SVGElement("circle", Color.blue, null, 1d, 7d), astarPath),
+          new Pair(new GraphCreator.SVGElement("circle", Color.green, null, 1d, 8d), dijkstraPath));
         num++;
         assertEquals(dijkstraDistance, astarDistance, DELTA);
       }
