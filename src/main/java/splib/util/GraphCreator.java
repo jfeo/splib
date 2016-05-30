@@ -9,8 +9,11 @@ import splib.util.Triple;
 
 import javax.xml.parsers.SAXParser;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Comparator;
+import java.awt.Color;
 
 import java.lang.Math;
 import java.io.File;
@@ -87,10 +90,57 @@ public class GraphCreator {
    return G;
  }
 
-  public static <V extends SPVertex> void dumpTestSvg(double scale, String path, Graph<V> G,
-      ArrayList<Pair<Double, Double>> positions, V s, V t, ArrayList<V> p1, ArrayList<V> p2, V z) {
+
+  public static class SVGElement {
+    private String tag;
+    private Color stroke;
+    private Color fill;
+    private double strokeWidth;
+    private double radius;
+
+    public SVGElement(String tag, Color stroke, Color fill, double strokeWidth, double radius) {
+      this.tag = tag;
+      this.fill = fill;
+      this.stroke = stroke;
+      this.strokeWidth = strokeWidth;
+      this.radius = radius;
+    }
+
+    public String getElement(Double x, Double y) {
+      final String element = "<%s %s %s fill=\"%s\" stroke=\"%s\"/>";
+
+      String position = "";
+      if (this.tag == "rect") {
+        x = x - this.radius;
+        y = y - this.radius;
+        position = String.format("width=\"%f\" height=\"%f\" x=\"%f\" y=\"%f\"", this.radius*2, this.radius*2, x, y);
+      } else if (this.tag == "circle") {
+        position = String.format("r=\"%f\" cx=\"%f\" cy=\"%f\"", this.radius, x, y);
+      } else {
+        return "";
+      }
+
+      String strokeWidth = String.format("stroke-width=\"%f\"", this.strokeWidth);
+
+      String fill = "none";
+      if (this.fill != null) {
+        fill = String.format("rgb(%d, %d, %d)", this.fill.getRed(), this.fill.getGreen(), this.fill.getBlue());
+      }
+      String stroke = "none";
+      if (this.stroke != null) {
+        stroke = String.format("rgb(%d, %d, %d)", this.stroke.getRed(), this.stroke.getGreen(), this.stroke.getBlue());
+      }
+
+      return String.format(element, this.tag, position, strokeWidth, fill, stroke);
+    }
+  }
+
+
+  public static <V extends SPVertex> void graphSVG(double scale, String path, Graph<V> G,
+      List<Pair<Double, Double>> positions, SVGElement vertexElement, Pair<SVGElement, List<V>>... vertexSets) {
 
     double ratio = 1000d / scale;
+    HashSet<SPVertex> vertexEdgesDrawn = new HashSet<SPVertex>();
 
     try {
       PrintWriter writer = new PrintWriter(path, "UTF-8");
@@ -100,44 +150,36 @@ public class GraphCreator {
       writer.println("width=\"1000px\" height=\"1000px\" version=\"1.1\">");
 
       for (int i = 0; i < G.getVertices().size(); i++) {
-        for (Pair<Vertex, Double> adj : G.getVertices().get(i).getAdjacency()) {
-          int j = G.getVertices().indexOf((V)adj.getItem1());
-          writer.println(String.format("<path d=\"M %1$.3f %2$.3f L %3$.3f %4$.3f\" stroke=\"black\" stroke-width=\"0.1\" fill=\"none\" />",
-                positions.get(j).getItem1() * ratio,
-                positions.get(j).getItem2() * ratio,
-                positions.get(i).getItem1() * ratio,
-                positions.get(i).getItem2() * ratio));
+        V v = G.getVertices().get(i);
+        vertexEdgesDrawn.add(v);
+        for (Pair<Vertex, Double> adj : v.getAdjacency()) {
+          if (!vertexEdgesDrawn.contains(adj.getItem1())) {
+            int j = G.getVertices().indexOf((V)adj.getItem1());
+            writer.println(String.format("<path d=\"M %1$.3f %2$.3f L %3$.3f %4$.3f\" stroke=\"black\" stroke-width=\"0.1\" fill=\"none\" />",
+                  positions.get(j).getItem1() * ratio,
+                  positions.get(j).getItem2() * ratio,
+                  positions.get(i).getItem1() * ratio,
+                  positions.get(i).getItem2() * ratio));
+          }
         }
-        if (G.getVertices().get(i).getPredecessor() == null) {
-          writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"2\" fill=\"blue\"/>",
-              positions.get(i).getItem1() * ratio,
-              positions.get(i).getItem2() * ratio));
-        } else {
-          writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"2\" fill=\"cyan\"/>",
-              positions.get(i).getItem1() * ratio,
-              positions.get(i).getItem2() * ratio));
+        writer.println(vertexElement.getElement(positions.get(i).getItem1() * ratio,
+                                                positions.get(i).getItem2() * ratio));
+      }
+
+      for (Pair<SVGElement, List<V>> vSet : vertexSets) {
+        for (V v : vSet.getItem2()) {
+          int i = G.getVertices().indexOf(v);
+            Pair<Double, Double> position = positions.get(i);
+            writer.println(vSet.getItem1().getElement(position.getItem1() * ratio,
+                                                      position.getItem2() * ratio));
         }
       }
-
-
-      writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"7\"  stroke-widt=\"5\" stroke=\"lime\" fill=\"orange\"/>", positions.get(G.getVertices().indexOf(s)).getItem1() * ratio , positions.get(G.getVertices().indexOf(s)).getItem2() * ratio));
-      writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"7\" stroke-widt=\"5\" stroke=\"red\" fill=\"yellow\"/>", positions.get(G.getVertices().indexOf(t)).getItem1() * ratio , positions.get(G.getVertices().indexOf(t)).getItem2() * ratio ));
-
-      for (V v : p1) {
-        writer.println(String.format("<circle cx=\"%1$.3f\" cy=\"%2$.3f\" r=\"10\"  stroke-width=\"1\" stroke=\"magenta\" fill=\"none\"/>", positions.get(G.getVertices().indexOf(v)).getItem1() * ratio , positions.get(G.getVertices().indexOf(v)).getItem2() * ratio ));
-      }
-
-      for (V v : p2) {
-        writer.println(String.format("<rect x=\"%1$.3f\" y=\"%2$.3f\" width=\"20\" height=\"20\" stroke-width=\"1\" stroke=\"brown\" fill=\"none\"/>", positions.get(G.getVertices().indexOf(v)).getItem1() * ratio  - 10, positions.get(G.getVertices().indexOf(v)).getItem2() * ratio  - 10));
-      }
-
-      if (z != null)
-        writer.println(String.format("<rect x=\"%1$.3f\" y=\"%2$.3f\" width=\"30\" height=\"30\" stroke-width=\"1\" stroke=\"yellow\" fill=\"none\"/>", positions.get(G.getVertices().indexOf(z)).getItem1() * ratio  - 15, positions.get(G.getVertices().indexOf(z)).getItem2() * ratio  - 15));
 
       writer.println("</svg>");
       writer.close();
     } catch (Exception e) {
       System.out.println("Failed saving graph: " + e.toString());
+      e.printStackTrace();
     }
   }
 
