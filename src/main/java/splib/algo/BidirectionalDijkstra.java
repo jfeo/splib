@@ -67,14 +67,18 @@ public class BidirectionalDijkstra {
       }
     }
 
-    if (Qs.top() == null || Qt.top() == null) {
-      return new Pair(1.0d / 0.0f, null);
+    // Check if the shortest path found, is in the best shortest path
+    double bestPath = 1d/0d;
+    V bestV = null;
+
+    for (BDDVertex v : Qs.getElements()) {
+      if (v.getEstimate() + v.getSuccessorEstimate() <= bestPath) {
+        bestPath = v.getEstimate() + v.getSuccessorEstimate();
+        bestV = (V)v;
+      }
     }
 
-    // Check if the shortest path found, is in the best shortest path
-    double bestPath = s.getSuccessorEstimate();
-    V bestV = s;
-    for (BDDVertex v : G.getVertices()) {
+    for (BDDVertex v : Qt.getElements()) {
       if (v.getEstimate() + v.getSuccessorEstimate() <= bestPath) {
         bestPath = v.getEstimate() + v.getSuccessorEstimate();
         bestV = (V)v;
