@@ -5,7 +5,7 @@ import splib.data.Vertex;
 import java.util.ArrayList;
 import java.lang.Comparable;
 
-public class PlanarSPVertex extends SPVertex {
+public class EuclidianSPVertex extends SPVertex {
 
   public enum Status {
     Neither,
@@ -16,19 +16,19 @@ public class PlanarSPVertex extends SPVertex {
   protected Pair<Double, Double> position;
   protected Status status;
 
-  public PlanarSPVertex(double x, double y) {
+  public EuclidianSPVertex(double x, double y) {
     super();
     this.position = new Pair(x, y);
     this.status = Status.Neither;
   }
 
-  public PlanarSPVertex(PlanarSPVertex pred, double estimate, double x, double y) {
+  public EuclidianSPVertex(EuclidianSPVertex pred, double estimate, double x, double y) {
     super(pred, estimate);
     this.position = new Pair(x, y);
     this.status = Status.Neither;
   }
 
-  public PlanarSPVertex() {
+  public EuclidianSPVertex() {
     super();
     this.status = Status.Neither;
   }
