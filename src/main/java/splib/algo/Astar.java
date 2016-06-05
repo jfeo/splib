@@ -16,7 +16,7 @@ public class Astar {
 
 
   @FunctionalInterface
-  public interface Heuristic <V extends PlanarSPVertex> {
+  public interface Heuristic <V extends EuclidianSPVertex> {
     public double heuristic(V v, V u);
   }
 
@@ -29,11 +29,11 @@ public class Astar {
    * G.
    * @return The vertices.
    */
-  public static <V extends PlanarSPVertex> double singlePair(Graph<V> G, V s,
+  public static <V extends EuclidianSPVertex> double singlePair(Graph<V> G, V s,
       V t, Heuristic h, int heapArity) {
     Astar.initializeSingleSource(G, s);
 
-    Heap<PlanarSPVertex> open = new Heap<PlanarSPVertex>((v, u) -> {
+    Heap<EuclidianSPVertex> open = new Heap<EuclidianSPVertex>((v, u) -> {
       if (v.getEstimate() + h.heuristic(v, t) <
           u.getEstimate() + h.heuristic(u, t)) {
         return -1;
@@ -77,7 +77,7 @@ public class Astar {
    * @param G The graph to work on.
    * @param s The source vertex.
    */
-  public static <V extends PlanarSPVertex> void initializeSingleSource(
+  public static <V extends EuclidianSPVertex> void initializeSingleSource(
       Graph<V> G, SPVertex s) {
     for (V v : G.getVertices()) {
       v.setEstimate(1.0d / 0.0d); // Infinity
@@ -94,7 +94,7 @@ public class Astar {
    * @param v The second vertex.
    * @param weight The weight of the edge between the first and the second vertex.
    */
-  public static <V extends PlanarSPVertex> void relax(Heuristic h, Heap<V> open,
+  public static <V extends EuclidianSPVertex> void relax(Heuristic h, Heap<V> open,
       V u, V v, V t,
       double weight) {
     double newEstimate = u.getEstimate() + weight;
@@ -123,7 +123,7 @@ public class Astar {
     // }
   }
 
-  public static <V extends PlanarSPVertex> double euclidianHeuristic(V u, V v) {
+  public static <V extends EuclidianSPVertex> double euclidianHeuristic(V u, V v) {
     return Math.sqrt(Math.pow(v.getPosition().getItem1()
                               - u.getPosition().getItem1(), 2)
                    + Math.pow(v.getPosition().getItem2()
