@@ -3,8 +3,8 @@ package splib.util;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import splib.util.Quint;
-import splib.util.Heap;
+import splib.util.Triple;
+import splib.util.Quad;
 import splib.data.Graph;
 import splib.data.SPVertex;
 
@@ -13,75 +13,106 @@ import splib.data.SPVertex;
  * A class to perform a benchmark of methods, specifically in regard to their
  * time complexity.
  */
-public class BenchmarkSuite {
+public class BenchmarkSuite <V extends SPVertex> {
 
   public enum Output {
-    JSON,
     CSV,
     REGULAR,
     NONE
   }
 
   @FunctionalInterface
-  public interface SingleSourceAlgorithm {
-    public ArrayList<SPVertex> sssp(Heap<SPVertex> h, Graph<SPVertex> G, SPVertex s);
+  public interface SingleSourceAlgorithm<W extends SPVertex> {
+    public ArrayList<W> sssp(Graph<W> G, W s, int heapArity);
   }
 
-  private ArrayList<Quint<String, SingleSourceAlgorithm, Heap<SPVertex>, Graph<SPVertex>, SPVertex>> singleSourceBenchmarks;
+  @FunctionalInterface
+  public interface SinglePairAlgorithm<W extends SPVertex> {
+    public Object spsp(Graph<W> G, W s, W t, int heapArity);
+  }
+
+  private ArrayList<Triple<String, SingleSourceAlgorithm, Triple<Graph<V>, V,
+          Integer>>> singleSourceBenchmarks;
+  private ArrayList<Triple<String, SinglePairAlgorithm, Quad<Graph<V>, V, V,
+          Integer>>> singlePairBenchmarks;
 
   public BenchmarkSuite() {
-    this.singleSourceBenchmarks = new ArrayList<Quint<String, SingleSourceAlgorithm, Heap<SPVertex>, Graph<SPVertex>, SPVertex>>();
+    this.singleSourceBenchmarks = new ArrayList<Triple<String,
+      SingleSourceAlgorithm, Triple<Graph<V>, V, Integer>>>();
+    this.singlePairBenchmarks = new ArrayList<Triple<String,
+      SinglePairAlgorithm, Quad<Graph<V>, V, V,Integer>>>();
   }
 
-  public void addSingleSourceBenchmark(String name, SingleSourceAlgorithm algo, Heap<SPVertex> h, Graph<SPVertex> G, SPVertex s) {
-    this.singleSourceBenchmarks.add(new Quint(name, algo, h, G, s));
+  public void addSingleSourceBenchmark(String name, SingleSourceAlgorithm<V> algo,
+      Graph<V> G, V s, int heapArity) {
+    this.singleSourceBenchmarks.add(new Triple(name, algo, new Triple(G, s, heapArity)));
   }
 
-  public void runSingleSourceBenchmark(Output type, Quint<String, SingleSourceAlgorithm, Heap<SPVertex>, Graph<SPVertex>, SPVertex> ssBm, Boolean comma) {
-    this.runSingleSourceBenchmark(type, ssBm.getItem1(), ssBm.getItem2(), ssBm.getItem3(), ssBm.getItem4(), ssBm.getItem5(), comma);
+  public void addSinglePairBenchmark(String name, SinglePairAlgorithm<V> algo,
+      Graph<V> G, V s, V t, int heapArity) {
+    this.singlePairBenchmarks.add(new Triple(name, algo,
+          new Quad(G, s, t, heapArity)));
   }
 
-  public void runSingleSourceBenchmark(Output type, String name, SingleSourceAlgorithm algo, Heap<SPVertex> h, Graph<SPVertex> G, SPVertex s, Boolean comma) {
+  public void runSinglePairBenchmark(Output type, String name,
+        SinglePairAlgorithm<V> algo, Quad<Graph<V>, V, V, Integer> args) {
       long ns = System.nanoTime();
       long ms = System.currentTimeMillis();
-      algo.sssp(h, G, s);
+      algo.<V>spsp(args.getItem1(), args.getItem2(), args.getItem3(), args.getItem4());
       ns = System.nanoTime() - ns;
       ms = System.currentTimeMillis() - ms;
-
-      if (type == Output.JSON) {
-        if (!comma) {
-          comma = true;
-        } else {
-          System.out.print(",");
-        }
-        System.out.printf("{\'name\':\'%s\', \'vcount\':%d, \'ecount\':%d, \'ns\':%d, \'ms\':%d}",
-            name, G.getVertexCount(), G.getEdgeCount(), ns, ms);
-      } else if (type == Output.REGULAR) {
+      if (type == Output.REGULAR) {
         System.out.println("Benchmarking " + name);
-        System.out.println(" vertices: " + G.getVertexCount());
-        System.out.println("    edges: " + G.getEdgeCount());
+        System.out.println("heap arity: " + args.getItem4());
+        System.out.println(" vertices: " + args.getItem1().getVertexCount());
+        System.out.println("    edges: " + args.getItem1().getEdgeCount());
         System.out.printf("       ns: %s\n", ns);
         System.out.printf("       ms: %s\n", ms);
       } else if (type == Output.CSV) {
-        System.out.printf("%s\t%d\t%d\t%d\t%d\t\n", name, G.getVertexCount(), G.getEdgeCount(), ns, ms);
+        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t\n", name,
+            args.getItem4(), args.getItem1().getVertexCount(),
+            args.getItem1().getEdgeCount(), ms, ns);
+      }
+  }
+
+  public void runSingleSourceBenchmark(Output type, String name,
+        SingleSourceAlgorithm<V> algo, Triple<Graph<V>, V, Integer> args) {
+      long ns = System.nanoTime();
+      long ms = System.currentTimeMillis();
+      algo.<V>sssp(args.getItem1(), args.getItem2(), args.getItem3());
+      ns = System.nanoTime() - ns;
+      ms = System.currentTimeMillis() - ms;
+      if (type == Output.REGULAR) {
+        System.out.println("Benchmarking " + name);
+        System.out.println("heap arity: " + args.getItem3());
+        System.out.println(" vertices: " + args.getItem1().getVertexCount());
+        System.out.println("    edges: " + args.getItem1().getEdgeCount());
+        System.out.printf("       ns: %s\n", ns);
+        System.out.printf("       ms: %s\n", ms);
+      } else if (type == Output.CSV) {
+        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t\n", name,
+            args.getItem3(), args.getItem1().getVertexCount(),
+            args.getItem1().getEdgeCount(), ms, ns);
       }
   }
 
   public void run(Output type) {
-    if (type == Output.JSON) {
-      System.out.printf("[");
-    } else if (type == Output.CSV) {
-      System.out.println("name\tvertices\tedges\ttimenano\ttimemilli");
+    if (type == Output.CSV) {
+      System.out.println("name\tarity\tvertices\tedges\ttimemilli\ttimenano");
     }
 
     // Single sources
-    Boolean comma = false;
-    for (Quint<String, SingleSourceAlgorithm, Heap<SPVertex>, Graph<SPVertex>, SPVertex> ssBm : singleSourceBenchmarks) {
-      this.runSingleSourceBenchmark(type, ssBm, comma);
+    for (Triple<String, SingleSourceAlgorithm, Triple<Graph<V>, V,Integer>> bm :
+        singleSourceBenchmarks) {
+      this.runSingleSourceBenchmark(type, bm.getItem1(), bm.getItem2(),
+          bm.getItem3());
     }
 
-    if (type == Output.JSON) {
-      System.out.print("]");
+    // Single pairs
+    for (Triple<String, SinglePairAlgorithm, Quad<Graph<V>, V, V,
+               Integer>> bm : singlePairBenchmarks) {
+      this.runSinglePairBenchmark(type, bm.getItem1(), bm.getItem2(),
+          bm.getItem3());
     }
   }
 
