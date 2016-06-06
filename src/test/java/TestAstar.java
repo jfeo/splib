@@ -7,14 +7,16 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Comparator;
 import java.util.ArrayList;
+import java.util.List;
 import java.awt.Color;
 
 import splib.util.GraphCreator;
+import splib.util.GraphDrawer;
 import splib.util.Pair;
 import splib.algo.Astar;
 import splib.algo.Dijkstra;
 import splib.data.Graph;
-import splib.data.PlanarSPVertex;
+import splib.data.EuclidianSPVertex;
 import splib.data.Vertex;
 
 
@@ -30,30 +32,37 @@ public class TestAstar {
     int num = 1;
     for (int i = 200; i <= 1000; i += 200) {
       for (int d = 4; d < 16; d += 4) {
-        Pair<Graph<PlanarSPVertex>, ArrayList<Pair<Double, Double>>> planar = GraphCreator.planar(PlanarSPVertex.class, 100, i, d);
-        Graph<PlanarSPVertex> G = planar.getItem1();
-        PlanarSPVertex s = G.getVertices().get(0);
-        PlanarSPVertex t = G.getVertices().get(1);
+        Pair<Graph<EuclidianSPVertex>, ArrayList<Pair<Double, Double>>> euclidian = GraphCreator.euclidian(EuclidianSPVertex.class, 100, i, d);
+        Graph<EuclidianSPVertex> G = euclidian.getItem1();
+        EuclidianSPVertex s = G.getVertices().get(0);
+        EuclidianSPVertex t = G.getVertices().get(1);
 
-        Dijkstra.<PlanarSPVertex>singleSource(G, s, 4);
-        ArrayList<PlanarSPVertex> dijkstraPath = new ArrayList();
+        Dijkstra.<EuclidianSPVertex>singleSource(G, s, 4);
+        ArrayList<EuclidianSPVertex> dijkstraPath = new ArrayList();
 
         // Extract the path found by Dijkstra
-        PlanarSPVertex v = t;
+        EuclidianSPVertex v = t;
         while (v != null) {
           dijkstraPath.add(v);
-          v = (PlanarSPVertex)v.getPredecessor();
+          v = (EuclidianSPVertex)v.getPredecessor();
         }
         dijkstraDistance = t.getEstimate();
 
-        astarDistance = Astar.<PlanarSPVertex>singlePair(G, s, t, Astar::euclidianHeuristic, 4);
+        astarDistance = Astar.<EuclidianSPVertex>singlePair(G, s, t, Astar::euclidianHeuristic, 4);
         // Generate path as list of vertices
-        ArrayList<PlanarSPVertex> astarPath = new ArrayList();
+        ArrayList<EuclidianSPVertex> astarPath = new ArrayList();
         v = t;
         while (v != null) {
           astarPath.add(v);
-          v = (PlanarSPVertex)v.getPredecessor();
+          v = (EuclidianSPVertex)v.getPredecessor();
         }
+        ArrayList<EuclidianSPVertex> astarRelax = new ArrayList();
+        for (EuclidianSPVertex u : G.getVertices()) {
+          if (u.getPredecessor() != null) {
+            astarRelax.add(u);
+          }
+        }
+
 
         // Graph dumping
         String filename;
@@ -63,14 +72,18 @@ public class TestAstar {
           filename = "astar_test_graph_success_"+num+".svg";
         }
 
-        GraphCreator.<PlanarSPVertex>graphSVG(100, filename, G, planar.getItem2(),
-          new GraphCreator.SVGElement("circle", null, Color.black, 1d, 2d),
-          new Pair(new GraphCreator.SVGElement("circle", Color.black, Color.yellow, 1d, 3d),
-            new ArrayList(){{add(s);}}),
-          new Pair(new GraphCreator.SVGElement("circle", Color.black, Color.red, 1d, 3d),
-            new ArrayList(){{add(t);}}),
-          new Pair(new GraphCreator.SVGElement("circle", Color.blue, null, 1d, 7d), astarPath),
-          new Pair(new GraphCreator.SVGElement("circle", Color.green, null, 1d, 8d), dijkstraPath));
+        GraphDrawer.<EuclidianSPVertex>graphSVG(100, filename, G, euclidian.getItem2(),
+          new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
+          new ArrayList<Pair<GraphDrawer.SVGElement, List<EuclidianSPVertex>>>(){{
+            add(new Pair(new GraphDrawer.SVGElement("circle", null, 0d, Color.white, 1d, 1d, 1d), astarRelax));
+            add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.yellow, 1d, 1d, 3d),
+              new ArrayList<EuclidianSPVertex>(){{add(s);}}));
+            add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.red, 1d, 1d, 3d),
+              new ArrayList<EuclidianSPVertex>(){{add(t);}}));
+            add(new Pair(new GraphDrawer.SVGElement("circle", Color.blue, 1d, null, 0d, 1d, 7d), astarPath));
+            add(new Pair(new GraphDrawer.SVGElement("circle", Color.green, 1d, null, 0d, 1d, 8d), dijkstraPath));
+          }},
+          new ArrayList());
         num++;
         assertEquals(dijkstraDistance, astarDistance, DELTA);
       }
