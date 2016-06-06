@@ -5,11 +5,13 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Collections;
 import java.awt.Color;
 
 import splib.util.Pair;
 import splib.util.GraphCreator;
+import splib.util.GraphDrawer;
 import splib.algo.BidirectionalDijkstra;
 import splib.algo.Dijkstra;
 import splib.data.Graph;
@@ -24,10 +26,10 @@ public class TestBidirectionalDijkstra {
   @Test
   public void test_dijkstraCompare() throws IllegalAccessException, InstantiationException {
     int num = 1;
-    for (int i = 100; i <= 100; i += 10) {
+    for (int i = 100; i <= 1000; i += 50) {
       for (int d = 3; d < 10; d++) {
-        Pair<Graph<BDDVertex>, ArrayList<Pair<Double, Double>>> planar = GraphCreator.planar(BDDVertex.class, 100, i, d);
-        Graph<BDDVertex> G = planar.getItem1();
+        Pair<Graph<BDDVertex>, ArrayList<Pair<Double, Double>>> euclidian = GraphCreator.euclidian(BDDVertex.class, 100, i, d);
+        Graph<BDDVertex> G = euclidian.getItem1();
         BDDVertex s = G.getVertices().get(0);
         BDDVertex t = G.getVertices().get(1);
 
@@ -50,7 +52,7 @@ public class TestBidirectionalDijkstra {
           v = (BDDVertex)v.getPredecessor();
         }
         Collections.reverse(bddPath);
-        v = result.getItem2().getSuccessor();
+        v = result.getItem2();
         while (v != null) {
           bddPath.add(v);
           v = v.getSuccessor();
@@ -64,13 +66,26 @@ public class TestBidirectionalDijkstra {
           filename = "bdd_test_graph_success_"+num+".svg";
         }
 
-        GraphCreator.<BDDVertex>graphSVG(100, filename, G, planar.getItem2(),
-              new GraphCreator.SVGElement("circle", null, Color.black, 1d, 2d),
-              new Pair(new GraphCreator.SVGElement("circle", Color.black, Color.yellow, 1d, 3d), new ArrayList(){{add(s);}}),
-              new Pair(new GraphCreator.SVGElement("circle", Color.black, Color.red, 1d, 3d), new ArrayList(){{add(t);}}),
-              new Pair(new GraphCreator.SVGElement("circle", Color.blue, null, 1d, 7d), bddPath),
-              new Pair(new GraphCreator.SVGElement("circle", Color.green, null, 1d, 8d), dijkstraPath),
-              new Pair(new GraphCreator.SVGElement("rect", Color.yellow, null, 1d, 10d), new ArrayList(){{add(result.getItem2());}}));
+        ArrayList<BDDVertex> bddSourceRelax = new ArrayList();
+        ArrayList<BDDVertex> bddTargetRelax = new ArrayList();
+        for (BDDVertex u : G.getVertices()) {
+          if (u.getPredecessor() != null)
+            bddSourceRelax.add(u);
+          if (u.getSuccessor() != null)
+            bddTargetRelax.add(u);
+        }
+
+        GraphDrawer.<BDDVertex>graphSVG(100, filename, G, euclidian.getItem2(),
+              new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
+              new ArrayList<Pair<GraphDrawer.SVGElement, List<BDDVertex>>>(){{
+                add(new Pair(new GraphDrawer.SVGElement("circle", Color.yellow, 0.5d, null, 0d, 1d, 2d), bddSourceRelax));
+                add(new Pair(new GraphDrawer.SVGElement("circle", Color.red, 0.5d, null, 0d, 1d, 2d), bddTargetRelax));
+                add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.yellow, 1d, 1d, 3d), new ArrayList(){{add(s);}}));
+                add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.red, 1d, 1d, 3d), new ArrayList(){{add(t);}}));
+                add(new Pair(new GraphDrawer.SVGElement("circle", Color.blue, 1d, null, 0d, 1d, 7d), bddPath));
+                add(new Pair(new GraphDrawer.SVGElement("circle", Color.green, 1d, null, 0d, 1d, 8d), dijkstraPath));
+                add(new Pair(new GraphDrawer.SVGElement("rect", Color.yellow, 1d, null, 0d, 1d, 10d), new ArrayList(){{add(result.getItem2());}}));
+              }}, new ArrayList());
 
         num++;
         assertEquals(dijkstraDistance, result.getItem1(), DELTA);
