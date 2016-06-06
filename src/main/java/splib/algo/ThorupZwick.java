@@ -94,7 +94,7 @@ public class ThorupZwick <V extends TZSPVertex> {
           V candidate = v;
           // follow the path back to the i-center, in order to find the closest
           // member of A_i to set as witness
-          while (candidate.getPredecessor() != s) {
+          while (candidate.getPredecessor() != s && candidate.getPredecessor() != null) {
             candidate = (V)candidate.getPredecessor();
           }
           v.setWitness(i, candidate, v.getEstimate());
@@ -106,11 +106,8 @@ public class ThorupZwick <V extends TZSPVertex> {
       ArrayList<V> tmp = (ArrayList<V>)A.get(i).clone();
       tmp.removeAll(this.A.get(i+1));
       for (V w : tmp) {
-        this.singleSource(w, i);
-        for (V v : this.G.getVertices()) {
-          if (v.getEstimate() < v.getWitness(i+1).getItem2()) {
-            w.getCluster().put(v, v.getEstimate());
-          }
+        for (V v : this.singleSource(w, i)) {
+          w.getCluster().put(v, v.getEstimate());
         }
       }
     }
@@ -160,6 +157,8 @@ public class ThorupZwick <V extends TZSPVertex> {
       return v.getEstimate().compareTo(u.getEstimate());
     }, this.heapArity);
 
+    Q.insert(s);
+
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
       V u = Q.extract();
@@ -181,8 +180,8 @@ public class ThorupZwick <V extends TZSPVertex> {
    */
   private void relax(Heap<V> Q, V u, V v, double weight, int i) {
     double newEstimate = u.getEstimate() + weight;
-    if (v.getWitness(i+1).getItem1() != null
-        && v.getWitness(i+1).getItem2() > newEstimate) {
+    if (newEstimate < v.getEstimate()
+        && newEstimate < v.getWitness(i+1).getItem2()) {
       v.setPredecessor(u);
       v.setEstimate(newEstimate);
       Q.insert(v);
