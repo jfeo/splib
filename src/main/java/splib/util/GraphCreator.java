@@ -3,7 +3,7 @@ package splib.util;
 import splib.data.Graph;
 import splib.data.Vertex;
 import splib.data.SPVertex;
-import splib.data.PlanarSPVertex;
+import splib.data.EuclidianSPVertex;
 import splib.util.Pair;
 import splib.util.Triple;
 
@@ -42,9 +42,9 @@ public class GraphCreator {
   * @param n The number of vertices in the graph.
   * @return The graph.
   */
- public static <V extends SPVertex> Graph<SPVertex> complete(Class<V> vClass,
+ public static <V extends SPVertex> Graph<V> complete(Class<V> vClass,
      int n) throws InstantiationException, IllegalAccessException {
-   Graph<SPVertex> G = new Graph();
+   Graph<V> G = new Graph();
    Random random = new Random();
 
    for (int i = 0; i < n; i++) {
@@ -91,105 +91,12 @@ public class GraphCreator {
  }
 
 
-  public static class SVGElement {
-    private String tag;
-    private Color stroke;
-    private Color fill;
-    private double strokeWidth;
-    private double radius;
-
-    public SVGElement(String tag, Color stroke, Color fill, double strokeWidth, double radius) {
-      this.tag = tag;
-      this.fill = fill;
-      this.stroke = stroke;
-      this.strokeWidth = strokeWidth;
-      this.radius = radius;
-    }
-
-    public String getElement(Double x, Double y) {
-      final String element = "<%s %s %s fill=\"%s\" stroke=\"%s\"/>";
-
-      String position = "";
-      if (this.tag == "rect") {
-        x = x - this.radius;
-        y = y - this.radius;
-        position = String.format("width=\"%f\" height=\"%f\" x=\"%f\" y=\"%f\"", this.radius*2, this.radius*2, x, y);
-      } else if (this.tag == "circle") {
-        position = String.format("r=\"%f\" cx=\"%f\" cy=\"%f\"", this.radius, x, y);
-      } else {
-        return "";
-      }
-
-      String strokeWidth = String.format("stroke-width=\"%f\"", this.strokeWidth);
-
-      String fill = "none";
-      if (this.fill != null) {
-        fill = String.format("rgb(%d, %d, %d)", this.fill.getRed(), this.fill.getGreen(), this.fill.getBlue());
-      }
-      String stroke = "none";
-      if (this.stroke != null) {
-        stroke = String.format("rgb(%d, %d, %d)", this.stroke.getRed(), this.stroke.getGreen(), this.stroke.getBlue());
-      }
-
-      return String.format(element, this.tag, position, strokeWidth, fill, stroke);
-    }
-  }
-
-
-  public static <V extends SPVertex> void graphSVG(double scale, String path, Graph<V> G,
-      List<Pair<Double, Double>> positions, SVGElement vertexElement, Pair<SVGElement, List<V>>... vertexSets) {
-
-    double ratio = 1000d / scale;
-    HashSet<SPVertex> vertexEdgesDrawn = new HashSet<SPVertex>();
-
-    try {
-      PrintWriter writer = new PrintWriter(path, "UTF-8");
-      writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
-      writer.println("<svg xmlns:svg=\"http://www.w3.org/2000/svg\"");
-      writer.println("xmlns=\"http://www.w3.org/2000/svg\"");
-      writer.println("width=\"1000px\" height=\"1000px\" version=\"1.1\">");
-
-      for (int i = 0; i < G.getVertices().size(); i++) {
-        V v = G.getVertices().get(i);
-        vertexEdgesDrawn.add(v);
-        for (Pair<Vertex, Double> adj : v.getAdjacency()) {
-          if (!vertexEdgesDrawn.contains(adj.getItem1())) {
-            int j = G.getVertices().indexOf((V)adj.getItem1());
-            writer.println(String.format("<path d=\"M %1$.3f %2$.3f L %3$.3f %4$.3f\" stroke=\"black\" stroke-width=\"0.1\" fill=\"none\" />",
-                  positions.get(j).getItem1() * ratio,
-                  positions.get(j).getItem2() * ratio,
-                  positions.get(i).getItem1() * ratio,
-                  positions.get(i).getItem2() * ratio));
-          }
-        }
-        writer.println(vertexElement.getElement(positions.get(i).getItem1() * ratio,
-                                                positions.get(i).getItem2() * ratio));
-      }
-
-      for (Pair<SVGElement, List<V>> vSet : vertexSets) {
-        for (V v : vSet.getItem2()) {
-          int i = G.getVertices().indexOf(v);
-            Pair<Double, Double> position = positions.get(i);
-            writer.println(vSet.getItem1().getElement(position.getItem1() * ratio,
-                                                      position.getItem2() * ratio));
-        }
-      }
-
-      writer.println("</svg>");
-      writer.close();
-    } catch (Exception e) {
-      System.out.println("Failed saving graph: " + e.toString());
-      e.printStackTrace();
-    }
-  }
-
-
  /**
-  * Build a planar graph.
+  * Build a euclidian graph.
   * @param V The number of vertices.
   * @return The generated graph.
   */
-  public static <V extends SPVertex> Pair<Graph<V>, ArrayList<Pair<Double, Double>>> planar(Class<V> vClass, double scale, int n, int degree)
+  public static <V extends SPVertex> Pair<Graph<V>, ArrayList<Pair<Double, Double>>> euclidian(Class<V> vClass, double scale, int n, int degree)
     throws InstantiationException, IllegalAccessException {
     Graph<V> G = new Graph<V>();
     ArrayList<Pair<Double, Double>> positions = new ArrayList();
@@ -199,8 +106,8 @@ public class GraphCreator {
       V v = vClass.newInstance();
       Pair<Double, Double> position = new Pair(random.nextDouble() * scale, random.nextDouble() * scale);
       positions.add(position);
-      if (vClass.isAssignableFrom(PlanarSPVertex.class)) {
-        ((PlanarSPVertex)v).setPosition(position.getItem1(), position.getItem2());
+      if (EuclidianSPVertex.class.isAssignableFrom(vClass))  {
+        ((EuclidianSPVertex)v).setPosition(position.getItem1(), position.getItem2());
       }
       G.addVertex(v);
     }
