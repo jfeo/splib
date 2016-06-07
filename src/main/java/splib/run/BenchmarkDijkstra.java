@@ -31,44 +31,29 @@ public class BenchmarkDijkstra {
     // Warm-up complete
     // BenchmarkSuite<SPVertex> b = new BenchmarkSuite<SPVertex>();
     b = new BenchmarkSuite<SPVertex>();
+    int numHeaps = 10;
 
     for (int i = 500; i < 5000; i += 500) {
-      for (int a = 2; a < 6; a++) {
-        Pair<Graph<SPVertex>, ?> G1 = GraphCreator.<SPVertex>euclidian(SPVertex.class, 100d, i, 4);
-        b.runSingleSourceBenchmark(BenchmarkSuite.Output.CSV,
-            "Dijkstra, " + a + "-ary Heap", Dijkstra::singleSource,
-            new Triple(G1.getItem1(), G1.getItem1().getVertices().get(10), a));
-      }
-    }
-
-    for (int i = 500; i < 5000; i += 500) {
-      for (int a = 2; a < 6; a++) {
-        Pair<Graph<SPVertex>, ?> G = GraphCreator.<SPVertex>euclidian(SPVertex.class, 100d, i, 4);
-        b.runSingleSourceBenchmark(BenchmarkSuite.Output.CSV,
-            "Dijkstra, " + a + "-ary Heap", Dijkstra::singleSource,
-            new Triple(G.getItem1(), G.getItem1().getVertices().get(0), a));
+      for (int d = 2; d < 10; d++) {
+        Pair<Graph<SPVertex>, ?> G1 = GraphCreator.<SPVertex>euclidian(SPVertex.class, 100d, i, d);
+        for (int a = 2; a <= numHeaps; a++) {
+          b.runSingleSourceBenchmark(BenchmarkSuite.Output.CSV,
+              "Dijkstra, " + a + "-ary Heap", Dijkstra::singleSource,
+              new Triple(G1.getItem1(), G1.getItem1().getVertices().get(10), a));
+        }
       }
     }
 
     for (int i = 100; i < 4600; i += 100) {
-      for (float p = 1.0f; p > 2.0f * Math.log((double)i) / (double)i; p -= 0.01f) {
-        for (int a = 2; a < 6; a++) {
-          Graph<SPVertex> G = GraphCreator.<SPVertex>erdosrenyi(SPVertex.class, i, p);
+      for (float p = 1.0f; p > 2.0f * Math.log((double)i) / (double)i; p -= 0.05f) {
+        Graph<SPVertex> G = GraphCreator.<SPVertex>erdosrenyi(SPVertex.class, i, p);
+        for (int a = 2; a <= numHeaps; a++) {
           b.runSingleSourceBenchmark(BenchmarkSuite.Output.CSV,
               "Dijkstra, " + a + "-ary Heap", Dijkstra::singleSource,
               new Triple(G, G.getVertices().get(0), a));
           }
       }
     }
-
-    // for (int i = 100; i < 4600; i += 100) {
-    //   for (float p = 1.0f; p > 2.0f * Math.log((double)i) / (double)i; p -= 0.01f) {
-    //     Graph<SPVertex> G2 = GraphCreator.erdosrenyi(i, p);
-    //     b.runSingleSourceBenchmark(BenchmarkSuite.Output.CSV,
-    //         "Dijkstra, Three Heap", Dijkstra::singleSource, new MinThreeHeap(fCompare), G2,
-    //         G2.getVertices().get(0), false);
-    //   }
-    // }
   }
 
 

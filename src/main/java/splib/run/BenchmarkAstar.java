@@ -18,22 +18,26 @@ public class BenchmarkAstar {
 
   public static void main(String[] arg) throws InstantiationException,
          IllegalAccessException {
+
     BenchmarkSuite.SinglePairAlgorithm<EuclidianSPVertex> astar = (Gr, vs, vt, a) -> Astar.<EuclidianSPVertex>singlePair(Gr, vs, vt, Astar::euclidianHeuristic, a);
 
-    // Warm-up complete
     BenchmarkSuite<EuclidianSPVertex> b = new BenchmarkSuite<EuclidianSPVertex>();
-    // b = new BenchmarkSuite<EuclidianSPVertex>();
 
-    for (int i = 100; i < 5000; i += 100) {
-      for (int d = 1; d < i; d *= 3) {
+    int maxHeaps = 10;
+
+    for (int i = 150; i < 5000; i += 100) {
+      for (int d = 2; d < i; d += 70) {
         Pair<Graph<EuclidianSPVertex>, ?> G
           = GraphCreator.<EuclidianSPVertex>euclidian(EuclidianSPVertex.class,
               100d, i, d);
-        for (int a = 2; a < 10; a++) {
-          b.runSinglePairBenchmark(BenchmarkSuite.Output.CSV,
-              "A*", astar, new Quad(G.getItem1(),
-                G.getItem1().getVertices().get(10),
-                G.getItem1().getVertices().get(5), a));
+        for (int a = 2; a <= maxHeaps; a++) {
+          // run astar on a bunch of pairs
+          for (int u = 1; u < i; u += i/5) {
+            b.runSinglePairBenchmark(BenchmarkSuite.Output.CSV,
+              "A* " + a + "-ary Heap", astar, new Quad(G.getItem1(),
+                G.getItem1().getVertices().get(0),
+                G.getItem1().getVertices().get(u), a));
+          }
         }
       }
     }
