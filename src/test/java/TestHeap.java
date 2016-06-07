@@ -13,26 +13,25 @@ import splib.data.Vertex;
 
 public class TestHeap {
 
-
   @Test
   public void test_emptyConstructor() {
-    Heap<String> h = new Heap<String>((s1, s2) ->
-        s1.compareTo(s2), 2);
-    h.insert("B Second string");
-    h.insert("E Fifth string");
-    h.insert("C Third string");
-    h.insert("D Fourth string");
-    h.insert("A First string");
 
-    String s = h.extract();
+    Heap<String> Q = new Heap<String>((s1, s2) -> s1.compareTo(s2), 4);
+    Q.insert("B Second string");
+    Q.insert("E Fifth string");
+    Q.insert("C Third string");
+    Q.insert("D Fourth string");
+    Q.insert("A First string");
+
+    String s = Q.extract();
     assertEquals("A First string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("B Second string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("C Third string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("D Fourth string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("E Fifth string", s);
   }
 
@@ -45,18 +44,17 @@ public class TestHeap {
     A.add("C Third string");
     A.add("D Fourth string");
     A.add("A First string");
-    Heap<String> h = new Heap<String>((s1, s2) ->
-        s1.compareTo(s2), A, 2);
+    Heap<String> Q = new Heap<String>((s1, s2) -> s1.compareTo(s2), A, 4);
 
-    String s = h.extract();
+    String s = Q.extract();
     assertEquals("A First string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("B Second string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("C Third string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("D Fourth string", s);
-    s = h.extract();
+    s = Q.extract();
     assertEquals("E Fifth string", s);
   }
 
