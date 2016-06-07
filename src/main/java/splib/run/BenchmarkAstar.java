@@ -32,12 +32,10 @@ public class BenchmarkAstar {
               100d, i, d);
         for (int a = 2; a <= maxHeaps; a++) {
           // run astar on a bunch of pairs
-          for (int u = 1; u < i; u += i/5) {
-            b.runSinglePairBenchmark(BenchmarkSuite.Output.CSV,
-              "A* " + a + "-ary Heap", astar, new Quad(G.getItem1(),
-                G.getItem1().getVertices().get(0),
-                G.getItem1().getVertices().get(u), a));
-          }
+          b.runSinglePairBenchmark(BenchmarkSuite.Output.CSV,
+            "A* " + a + "-ary Heap", astar, new Quad(G.getItem1(),
+              G.getItem1().getVertices().get(0),
+              G.getItem1().getVertices().get(1), a));
         }
       }
     }

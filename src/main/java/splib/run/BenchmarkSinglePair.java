@@ -13,7 +13,7 @@ import splib.util.Quad;
 import splib.data.BDDVertex;
 import splib.data.Graph;
 
-public class BenchmarkBidirectionalDijkstra {
+public class BenchmarkSinglePair {
 
 
   public static void main(String[] arg) throws InstantiationException, IllegalAccessException {
