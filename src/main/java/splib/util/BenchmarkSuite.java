@@ -9,6 +9,7 @@ import splib.util.Quad;
 import splib.data.Graph;
 import splib.data.SPVertex;
 import splib.algo.Oracle;
+import splib.algo.Dijkstra;
 import java.lang.reflect.InvocationTargetException;
 
 
@@ -40,15 +41,16 @@ public class BenchmarkSuite <V extends SPVertex> {
           Integer>>> singlePairBenchmarks;
   private ArrayList<Quint<String, Class<?>, Graph<V>, Integer, Integer>>
     oraclePreprocessBenchmarks;
+  private ArrayList<Triple<String, Oracle, Graph<V>>> oracleQueryBenchmarks;
 
   public BenchmarkSuite() {
     this.singleSourceBenchmarks = new ArrayList<Triple<String,
       SingleSourceAlgorithm, Triple<Graph<V>, V, Integer>>>();
     this.singlePairBenchmarks = new ArrayList<Triple<String,
       SinglePairAlgorithm, Quad<Graph<V>, V, V,Integer>>>();
-
-    // this.oraclePreprocessBenchmarks = ArrayList<Quint<String, Class, Graph<V>, Integer,
-    //   Integer>>();
+    this.oraclePreprocessBenchmarks = new ArrayList<Quint<String, Class<?>, Graph<V>,
+      Integer, Integer>>();
+    this.oracleQueryBenchmarks = new ArrayList<Triple<String, Oracle, Graph<V>>>();
   }
 
   public void addSingleSourceBenchmark(String name, SingleSourceAlgorithm<V> algo,
@@ -64,6 +66,10 @@ public class BenchmarkSuite <V extends SPVertex> {
 
   public <O extends Oracle> void addOraclePreprocessBenchmark(String name, Class<O> oClass, Graph<V> G, int k, int heapArity) {
     this.oraclePreprocessBenchmarks.add(new Quint(name, oClass, G, k, heapArity));
+  }
+
+  public void addOracleQueryBenchmark(String name, Oracle o, Graph<V> G) {
+    this.oracleQueryBenchmarks.add(new Triple(name, o, G));
   }
 
   public void runSinglePairBenchmark(Output type, String name,
@@ -115,7 +121,11 @@ public class BenchmarkSuite <V extends SPVertex> {
 
       long ns = System.nanoTime();
       long ms = System.currentTimeMillis();
+      Runtime runtime = Runtime.getRuntime();
+      runtime.gc();
+      long memory = runtime.freeMemory();
       Oracle or = (Oracle)ctor.newInstance(args.getItem2(), args.getItem1(), args.getItem3());
+      memory -= runtime.freeMemory();
       ns = System.nanoTime() - ns;
       ms = System.currentTimeMillis() - ms;
       if (type == Output.REGULAR) {
@@ -124,18 +134,70 @@ public class BenchmarkSuite <V extends SPVertex> {
         System.out.println(" vertices: " + args.getItem1().getVertexCount());
         System.out.println("    edges: " + args.getItem1().getEdgeCount());
         System.out.println("        k: " + args.getItem2());
+        System.out.println("  mem (b): " + memory);
         System.out.printf("       ns: %s\n", ns);
         System.out.printf("       ms: %s\n", ms);
       } else if (type == Output.CSV) {
-        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\n", name,
+        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", name,
             args.getItem3(), args.getItem1().getVertexCount(),
-            args.getItem1().getEdgeCount(), args.getItem2(), ms, ns);
+            args.getItem1().getEdgeCount(), args.getItem2(), memory, ms, ns);
       }
     } catch (InvocationTargetException | IllegalAccessException |
         NoSuchMethodException | InstantiationException ex) {
       // Ignore
     }
+  }
 
+  public void runOracleQueryBenchmark(Output type, String name,
+      Oracle o, Graph<V> G) {
+    long avgNs = 0;
+    long avgMs = 0;
+    double minStretch = Double.MAX_VALUE;
+    double avgStretch = 0;
+    double maxStretch = 0;
+
+    // Query all pairs of vertices
+    for (int i = 0; i < G.getVertices().size(); i++) {
+      for (int j = i + 1; j < G.getVertices().size(); j++) {
+        V s = G.getVertices().get(i);
+        V t = G.getVertices().get(j);
+        avgNs -= System.nanoTime();
+        avgMs -= System.currentTimeMillis();
+        double oracleDistance = o.query(s, t);
+        avgNs += System.nanoTime();
+        avgMs += System.currentTimeMillis();
+        Dijkstra.<V>singleSource(G, s, 4);
+        double actualDistance = t.getEstimate();
+        double stretch = oracleDistance / actualDistance;
+        if (stretch < minStretch)
+          minStretch = stretch;
+        else if (stretch > maxStretch)
+          maxStretch = stretch;
+        avgStretch += stretch;
+      }
+    }
+
+    // compute averages
+    int pairs = (G.getVertices().size() * (G.getVertices().size() - 1)) / 2;
+    avgNs /= pairs; // N*(N-1)/2
+    avgMs /= pairs; // N*(N-1)/2
+    avgStretch /= pairs; // N*(N-1)/2
+
+    if (type == Output.REGULAR) {
+      System.out.println("Benchmarking " + name);
+      System.out.println("   vertices: " + G.getVertexCount());
+      System.out.println("      edges: " + G.getEdgeCount());
+      System.out.println("          k: " + o.getK());
+      System.out.println("max stretch: " + maxStretch);
+      System.out.println("min stretch: " + minStretch);
+      System.out.println("avg stretch: " + avgStretch);
+      System.out.printf("    avg. ns: %s\n", avgNs);
+      System.out.printf("    avg. ms: %s\n", avgMs);
+    } else if (type == Output.CSV) {
+      System.out.printf("%s\t%d\t%d\t%d\t%f\t%f\t%f\t%d\t%d\n", name,
+          G.getVertexCount(), G.getEdgeCount(), o.getK(), maxStretch,
+          minStretch, avgStretch, avgNs, avgMs);
+    }
   }
 
   public void run(Output type) {
@@ -157,10 +219,16 @@ public class BenchmarkSuite <V extends SPVertex> {
           bm.getItem3());
     }
 
+    // Oracle preprocessing
     for (Quint<String, Class<?>, Graph<V>, Integer, Integer> bm :
         oraclePreprocessBenchmarks) {
       this.runOraclePreprocessBenchmark(type, bm.getItem1(), bm.getItem2(),
           new Triple(bm.getItem3(), bm.getItem4(), bm.getItem5()));
+    }
+
+    // Oracle queries
+    for (Triple<String, Oracle, Graph<V>> bm : oracleQueryBenchmarks) {
+      this.runOracleQueryBenchmark(type, bm.getItem1(), bm.getItem2(), bm.getItem3());
     }
   }
 

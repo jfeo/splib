@@ -4,6 +4,7 @@ package splib.algo;
 import splib.data.Graph;
 import splib.data.SPVertex;
 import splib.data.TZSPVertex;
+import splib.algo.Oracle;
 import splib.data.Vertex;
 import splib.util.Heap;
 import splib.util.Pair;
@@ -16,7 +17,7 @@ import java.lang.Math;
 
 
 
-public class ThorupZwick <V extends TZSPVertex> {
+public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
 
   private static final Double DELTA = 1e-10;
 
@@ -25,7 +26,7 @@ public class ThorupZwick <V extends TZSPVertex> {
   private int heapArity;
   private ArrayList<ArrayList<V>> A;
 
-  public ThorupZwick(int k, Graph<V> G, int heapArity) {
+  public ThorupZwick(Integer k, Graph<V> G, Integer heapArity) {
     this.k = k;
     this.G = G;
     this.heapArity = heapArity;
@@ -37,10 +38,18 @@ public class ThorupZwick <V extends TZSPVertex> {
     return A;
   }
 
+  public int getK() {
+    return k;
+  }
+
+  public int getHeapArity() {
+    return heapArity;
+  }
+
   /**
    * Preprocess a graph.
    */
-  public void preprocess() {
+  private void preprocess() {
 
     // initialize vertices for this constant k
     for (V v : this.G.getVertices()) {
