@@ -16,7 +16,6 @@ import java.util.Random;
 import java.lang.Math;
 
 
-
 public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
 
   private static final Double DELTA = 1e-10;
@@ -143,6 +142,9 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
     int i = 0;
     while (!v.getBunch().containsKey(w)) {
       i++;
+      if (i == this.k) {
+        return 1d / 0d;
+      }
       V vSwap = v;
       v = u;
       u = vSwap;
