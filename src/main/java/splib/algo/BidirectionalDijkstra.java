@@ -97,6 +97,9 @@ public class BidirectionalDijkstra {
       v.setEstimate(1.0d / 0.0d); // Infinity
       v.setSuccessorEstimate(1.0d / 0.0d); // Infinity
       v.setPredecessor(null);
+      v.setSuccessor(null);
+      v.setSourceStatus(BDDVertex.Status.NotQueued);
+      v.setTargetStatus(BDDVertex.Status.NotQueued);
     }
     s.setEstimate(0.0);
     t.setSuccessorEstimate(0.0);
