@@ -155,33 +155,40 @@ public class BenchmarkSuite <V extends SPVertex> {
     double minStretch = Double.MAX_VALUE;
     double avgStretch = 0;
     double maxStretch = 0;
+    int pairs = (G.getVertexCount() * (G.getVertexCount() - 1)) / 2;
+    int connectedPairs = pairs;
 
     // Query all pairs of vertices
-    for (int i = 0; i < G.getVertices().size(); i++) {
-      for (int j = i + 1; j < G.getVertices().size(); j++) {
-        V s = G.getVertices().get(i);
+    for (int i = 0; i < G.getVertexCount(); i++) {
+      V s = G.getVertices().get(i);
+      Dijkstra.<V>singleSource(G, s, 4);
+      for (int j = i + 1; j < G.getVertexCount(); j++) {
         V t = G.getVertices().get(j);
         avgNs -= System.nanoTime();
         avgMs -= System.currentTimeMillis();
         double oracleDistance = o.query(s, t);
         avgNs += System.nanoTime();
         avgMs += System.currentTimeMillis();
-        Dijkstra.<V>singleSource(G, s, 4);
-        double actualDistance = t.getEstimate();
-        double stretch = oracleDistance / actualDistance;
-        if (stretch < minStretch)
-          minStretch = stretch;
-        else if (stretch > maxStretch)
-          maxStretch = stretch;
-        avgStretch += stretch;
+
+        // we do not use infinite distances, since it messes up the stretch
+        if (oracleDistance == 1d/0d) {
+          connectedPairs--;
+        } else {
+          double actualDistance = t.getEstimate();
+          double stretch = oracleDistance / actualDistance;
+          if (stretch < minStretch)
+            minStretch = stretch;
+          else if (stretch > maxStretch)
+            maxStretch = stretch;
+          avgStretch += stretch;
+        }
       }
     }
 
     // compute averages
-    int pairs = (G.getVertices().size() * (G.getVertices().size() - 1)) / 2;
     avgNs /= pairs; // N*(N-1)/2
     avgMs /= pairs; // N*(N-1)/2
-    avgStretch /= pairs; // N*(N-1)/2
+    avgStretch /= connectedPairs; // N*(N-1)/2
 
     if (type == Output.REGULAR) {
       System.out.println("Benchmarking " + name);
