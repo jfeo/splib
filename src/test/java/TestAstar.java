@@ -67,23 +67,9 @@ public class TestAstar {
         // Graph dumping
         String filename;
         if (Math.abs(dijkstraDistance - astarDistance) > DELTA) {
-          filename = "astar_test_graph_failure_"+num+".svg";
-        } else {
-          filename = "astar_test_graph_success_"+num+".svg";
+          dumpSVG();
         }
 
-        GraphDrawer.<EuclidianSPVertex>graphSVG(100, filename, G, euclidian.getItem2(),
-          new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
-          new ArrayList<Pair<GraphDrawer.SVGElement, List<EuclidianSPVertex>>>(){{
-            add(new Pair(new GraphDrawer.SVGElement("circle", null, 0d, Color.white, 1d, 1d, 1d), astarRelax));
-            add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.yellow, 1d, 1d, 3d),
-              new ArrayList<EuclidianSPVertex>(){{add(s);}}));
-            add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.red, 1d, 1d, 3d),
-              new ArrayList<EuclidianSPVertex>(){{add(t);}}));
-            add(new Pair(new GraphDrawer.SVGElement("circle", Color.blue, 1d, null, 0d, 1d, 7d), astarPath));
-            add(new Pair(new GraphDrawer.SVGElement("circle", Color.green, 1d, null, 0d, 1d, 8d), dijkstraPath));
-          }},
-          new ArrayList());
         num++;
         assertEquals(dijkstraDistance, astarDistance, DELTA);
       }
@@ -91,5 +77,19 @@ public class TestAstar {
 
   }
 
+  public void dumpSVG() {
+    // GraphDrawer.<EuclidianSPVertex>graphSVG(100, filename, G, euclidian.getItem2(),
+    //   new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
+    //   new ArrayList<Pair<GraphDrawer.SVGElement, List<EuclidianSPVertex>>>(){{
+    //     add(new Pair(new GraphDrawer.SVGElement("circle", null, 0d, Color.white, 1d, 1d, 1d), astarRelax));
+    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.yellow, 1d, 1d, 3d),
+    //       new ArrayList<EuclidianSPVertex>(){{add(s);}}));
+    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.red, 1d, 1d, 3d),
+    //       new ArrayList<EuclidianSPVertex>(){{add(t);}}));
+    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.blue, 1d, null, 0d, 1d, 7d), astarPath));
+    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.green, 1d, null, 0d, 1d, 8d), dijkstraPath));
+    //   }},
+    //   new ArrayList());
+  }
 
 }
