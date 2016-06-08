@@ -22,17 +22,10 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
 
   private int k;
   private int heapArity;
-  private ArrayList<ArrayList<V>> A;
 
   public ThorupZwick(Integer k, Graph<V> G, Integer heapArity) {
     this.k = k;
     this.heapArity = heapArity;
-    this.A = new ArrayList<ArrayList<V>>();
-    this.preprocess(G);
-  }
-
-  public ArrayList<ArrayList<V>> getA() {
-    return A;
   }
 
   public int getK() {
@@ -46,22 +39,22 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
   /**
    * Preprocess a graph.
    */
-  private void preprocess(Graph<V> G) {
-
+  private ArrayList<ArrayList<V>> preprocess(Graph<V> G) {
+    ArrayList<ArrayList<V>> A = new ArrayList<ArrayList<V>>();
     // initialize vertices for this constant k
     for (V v : G.getVertices()) {
       v.initialize(this.k);
     }
 
-    this.A.add(new ArrayList<V>());
-    this.A.get(0).addAll(G.getVertices());
+    A.add(new ArrayList<V>());
+    A.get(0).addAll(G.getVertices());
 
     // Compute i-centers
     for (int i = 1; i < k; i++) {
-      this.A.add(new ArrayList<V>());
+      A.add(new ArrayList<V>());
 
-      ArrayList<V> preA = this.A.get(i-1);
-      ArrayList<V> curA = this.A.get(i);
+      ArrayList<V> preA = A.get(i-1);
+      ArrayList<V> curA = A.get(i);
 
       double thresh = Math.pow(G.getVertices().size(),
                                0 - 1.0d / (double)this.k);
@@ -77,7 +70,7 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
         continue;
       }
     }
-    this.A.add(new ArrayList<V>());
+    A.add(new ArrayList<V>());
 
     // Compute clusters
     for (int i = k - 1; i >= 0; i--) {
@@ -85,7 +78,7 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
       // Insert 'fake' vertex with 0 edges to vertices in A_i, for SSSP
       V s = (V)new TZSPVertex();
       s.initialize(this.k);
-      for (V w : this.A.get(i)) {
+      for (V w : A.get(i)) {
         G.addEdge(s, w, 0.0);
         w.setWitness(i, w, 0.0);
       }
@@ -110,7 +103,7 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
 
       // Compute clusters
       ArrayList<V> tmp = (ArrayList<V>)A.get(i).clone();
-      tmp.removeAll(this.A.get(i+1));
+      tmp.removeAll(A.get(i+1));
       for (V w : tmp) {
         for (V v : this.singleSource(G, w, i)) {
           w.getCluster().put(v, v.getEstimate());
@@ -126,6 +119,12 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
         }
       }
     }
+
+    for (V v : G.getVertices()) {
+      v.getBunch().clear();
+    }
+
+    return A;
   }
 
 
