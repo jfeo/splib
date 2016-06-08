@@ -8,9 +8,11 @@ import splib.util.Triple;
 import splib.util.Quad;
 import splib.data.Graph;
 import splib.data.SPVertex;
+import splib.data.BDDVertex;
 import splib.algo.Oracle;
 import splib.algo.Dijkstra;
 import java.lang.reflect.InvocationTargetException;
+import org.github.jamm.*;
 
 
 /*
@@ -43,7 +45,10 @@ public class BenchmarkSuite <V extends SPVertex> {
     oraclePreprocessBenchmarks;
   private ArrayList<Triple<String, Oracle, Graph<V>>> oracleQueryBenchmarks;
 
-  public BenchmarkSuite() {
+  private Class<V> vClass;
+
+  public BenchmarkSuite(Class<V> vClass) {
+    this.vClass = vClass;
     this.singleSourceBenchmarks = new ArrayList<Triple<String,
       SingleSourceAlgorithm, Triple<Graph<V>, V, Integer>>>();
     this.singlePairBenchmarks = new ArrayList<Triple<String,
@@ -79,39 +84,56 @@ public class BenchmarkSuite <V extends SPVertex> {
       algo.<V>spsp(args.getItem1(), args.getItem2(), args.getItem3(), args.getItem4());
       ns = System.nanoTime() - ns;
       ms = System.currentTimeMillis() - ms;
+
+      int relaxed = 0;
+      // count relaxed vertices
+      for (V v : args.getItem1().getVertices()) {
+        if (BDDVertex.class.isAssignableFrom(vClass)) {
+          if (((BDDVertex)v).getSuccessor() != null || v.getPredecessor() != null) {
+            relaxed++;
+          }
+        } else {
+          if (v.getPredecessor() != null) {
+            relaxed++;
+          }
+        }
+      }
+
       if (type == Output.REGULAR) {
         System.out.println("Benchmarking " + name);
         System.out.println("heap arity: " + args.getItem4());
         System.out.println(" vertices: " + args.getItem1().getVertexCount());
         System.out.println("    edges: " + args.getItem1().getEdgeCount());
+        System.out.println(" r. verts: " + relaxed);
         System.out.printf("       ns: %s\n", ns);
         System.out.printf("       ms: %s\n", ms);
       } else if (type == Output.CSV) {
-        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t\n", name,
+        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t\n", name,
             args.getItem4(), args.getItem1().getVertexCount(),
-            args.getItem1().getEdgeCount(), ms, ns);
+            args.getItem1().getEdgeCount(), relaxed, ms, ns);
       }
   }
 
   public void runSingleSourceBenchmark(Output type, String name,
-        SingleSourceAlgorithm<V> algo, Triple<Graph<V>, V, Integer> args) {
-      long ns = System.nanoTime();
-      long ms = System.currentTimeMillis();
-      algo.<V>sssp(args.getItem1(), args.getItem2(), args.getItem3());
-      ns = System.nanoTime() - ns;
-      ms = System.currentTimeMillis() - ms;
-      if (type == Output.REGULAR) {
-        System.out.println("Benchmarking " + name);
-        System.out.println("heap arity: " + args.getItem3());
-        System.out.println(" vertices: " + args.getItem1().getVertexCount());
-        System.out.println("    edges: " + args.getItem1().getEdgeCount());
-        System.out.printf("       ns: %s\n", ns);
-        System.out.printf("       ms: %s\n", ms);
-      } else if (type == Output.CSV) {
-        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t\n", name,
-            args.getItem3(), args.getItem1().getVertexCount(),
-            args.getItem1().getEdgeCount(), ms, ns);
-      }
+      SingleSourceAlgorithm<V> algo, Triple<Graph<V>, V, Integer> args) {
+    long ns = System.nanoTime();
+    long ms = System.currentTimeMillis();
+    algo.<V>sssp(args.getItem1(), args.getItem2(), args.getItem3());
+    ns = System.nanoTime() - ns;
+    ms = System.currentTimeMillis() - ms;
+
+    if (type == Output.REGULAR) {
+      System.out.println("Benchmarking " + name);
+      System.out.println("heap arity: " + args.getItem3());
+      System.out.println(" vertices: " + args.getItem1().getVertexCount());
+      System.out.println("    edges: " + args.getItem1().getEdgeCount());
+      System.out.printf("       ns: %s\n", ns);
+      System.out.printf("       ms: %s\n", ms);
+    } else if (type == Output.CSV) {
+      System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t\n", name,
+          args.getItem3(), args.getItem1().getVertexCount(),
+          args.getItem1().getEdgeCount(), ms, ns);
+    }
   }
 
   public void runOraclePreprocessBenchmark(Output type,
@@ -122,12 +144,17 @@ public class BenchmarkSuite <V extends SPVertex> {
       long ns = System.nanoTime();
       long ms = System.currentTimeMillis();
       Runtime runtime = Runtime.getRuntime();
-      runtime.gc();
-      long memory = runtime.freeMemory();
+      int vertices = args.getItem1().getVertexCount();
+      int edges = args.getItem1().getEdgeCount();
+
+      MemoryMeter meter = new MemoryMeter();
       Oracle or = (Oracle)ctor.newInstance(args.getItem2(), args.getItem1(), args.getItem3());
-      memory -= runtime.freeMemory();
+
+      long memory = meter.measureDeep(or);
+
       ns = System.nanoTime() - ns;
       ms = System.currentTimeMillis() - ms;
+      long memoryMb = memory / 1024 / 1024;
       if (type == Output.REGULAR) {
         System.out.println("Benchmarking " + name);
         System.out.println("heap arity: " + args.getItem3());
@@ -135,12 +162,12 @@ public class BenchmarkSuite <V extends SPVertex> {
         System.out.println("    edges: " + args.getItem1().getEdgeCount());
         System.out.println("        k: " + args.getItem2());
         System.out.println("  mem (b): " + memory);
+        System.out.println(" mem (mb): " + memoryMb);
         System.out.printf("       ns: %s\n", ns);
         System.out.printf("       ms: %s\n", ms);
       } else if (type == Output.CSV) {
-        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", name,
-            args.getItem3(), args.getItem1().getVertexCount(),
-            args.getItem1().getEdgeCount(), args.getItem2(), memory, ms, ns);
+        System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", name,
+            args.getItem3(), vertices, edges, args.getItem2(), memoryMb, memory, ms, ns);
       }
     } catch (InvocationTargetException | IllegalAccessException |
         NoSuchMethodException | InstantiationException ex) {
