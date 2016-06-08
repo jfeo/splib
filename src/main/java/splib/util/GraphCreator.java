@@ -37,6 +37,43 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class GraphCreator {
 
+public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V> vClass, Graph<U> graph, ArrayList<Pair<Double, Double>> positions)  throws InstantiationException, IllegalAccessException {
+  Graph<V> G = new Graph<V>();
+
+
+  for (int i = 0; i < graph.getVertexCount(); i++) {
+    G.addVertex(vClass.newInstance());
+  }
+
+  for (int i = 0; i < graph.getVertexCount(); i++) {
+    U v = graph.getVertices().get(i);
+    for (Pair<Vertex, Double> edge : v.getAdjacency()) {
+      boolean exists = false;
+      int j = graph.getVertices().indexOf(edge.getItem1());
+      for (Pair<Vertex, ?> edge2 : G.getVertices().get(j).getAdjacency()) {
+        if (edge2.getItem1() == G.getVertices().get(i)) {
+          exists = true;
+        }
+      }
+
+      if (!exists) {
+        G.addEdge(i, j, edge.getItem2());
+      }
+
+    }
+  }
+
+  if (EuclidianSPVertex.class.isAssignableFrom(vClass))  {
+    for (int i = 0; i < G.getVertexCount(); i++) {
+      Pair<Double, Double> position = positions.get(i);
+      ((EuclidianSPVertex)G.getVertices().get(i)).setPosition(position.getItem1(), position.getItem2());
+    }
+  }
+
+  return G;
+}
+
+
  /**
   * Generate a complete graph, with the given number of vertices.
   * @param n The number of vertices in the graph.
@@ -153,6 +190,108 @@ public class GraphCreator {
 
     return new Pair(G, positions);
   }
+
+  // private static boolean insideCircumcircle(double x, double y,
+  //             Triple<Triple<V, Double, Double>,
+  //                    Triple<V, Double, Double>,
+  //                    Triple<V, Double, Double>> triangle) {
+
+  // }
+
+  // public static <V extends SPVertex> bowyerwatson(Class<V> vClass, int vCount, double scale)
+  //   Graph<V> G = new Graph<V>();
+  //   Random random = new Random();
+
+  //   // triangulation := empty triangle mesh data structure
+  //   ArrayList<Triple<Triple<V, Double, Double>,
+  //                    Triple<V, Double, Double>,
+  //                    Triple<V, Double, Double>>> triangulation
+  //       = new ArrayList<Triple<Triple<V, Double, Double>,
+  //                       Triple<V, Double, Double>,
+  //                       Triple<V, Double, Double>>>();
+
+  //   // add super-triangle to triangulation
+  //   // must be large enough to completely contain all the points in pointList
+  //   V t1 = vClass.newInstance();
+  //   V t2 = vClass.newInstance();
+  //   V t3 = vClass.newInstance();
+  //   G.addVertex(t1); G.addVertex(t2); G.addVertex(t3);
+  //   G.addEdge(0, 1); G.addEdge(1, 2); G.addEdge(2, 0);
+  //   triangulation.add(Triple(new Triple(t1, scale * 0.50, scale * 1.50),
+  //                            new Triple(t2, - (1 / (1.0 - 1.50)) * 0.50 * scale, 0.0),
+  //                            new Triple(t3, 0.5 + (1 / (1.0 - 1.50)) * 0.50 * scale, 0.0)));
+
+  //   for (int i = 0; i < vCount; i++) { // add all the points one at a time to the triangulation
+  //     Pair<Double, Double> position = new Pair(random.nextDouble() * scale,
+  //         random.nextDouble() * scale);
+  //     V v = vClass.newInstance();
+
+  //     ArrayList<Triple<Triple<V, Double, Double>,
+  //                      Triple<V, Double, Double>,
+  //                      Triple<V, Double, Double>>> badTriangles
+  //         = new ArrayList<Triple<Triple<V, Double, Double>,
+  //                         Triple<V, Double, Double>,
+  //                         Triple<V, Double, Double>>>();
+  //     // first find all the triangles that are no longer valid due to the insertion
+  //     for (Triple<?, ?, ?> triangle : triangulation) {
+  //       if (insideCircumcircle(position.getItem1(), position.getItem2(), triangle)) {
+  //         badTriangles.add(triangle);
+  //       }
+  //     }
+
+  //     ArrayList<Pair<Triple<V, Double, Double>, Triple<V, Double, Double>>> polygon =
+  //       new ArrayList<Pair<Triple<V, Double, Double>, Triple<V, Double, Double>>>();
+
+  //     // find the boundary of the polygonal hole
+  //     for (int i = 0; i < badTriangles.size(); i++) {
+  //       Triple<?, ?, ?> triangle = badTriangles.get(i);
+  //       // edges are not shared by any other triangles in badTriangles
+  //       boolean shared = false;
+  //       for (int j = 0; j < badTriangles.size(); j++) {
+  //         if (j == i)
+  //           continue;
+  //         Triple<?, ?, ?> otherTriangle = badTriangles.get(j);
+  //         if (triangle.getItem1() == otherTriangle.getItem1() && triangle.getItem2() == otherTriangle.getItem2()
+  //          || triangle.getItem1() == otherTriangle.getItem2() && triangle.getItem2() && otherTriangle.getItem2()
+  //          || triangle.getItem1() == otherTriangle.getItem3() && triangle.getItem2() && otherTriangle.getItem2()
+  //          || triangle.getItem2() == otherTriangle.getItem1() && triangle.getItem2() && otherTriangle.getItem2()
+  //          || triangle.getItem2() == otherTriangle.getItem2() && triangle.getItem2() && otherTriangle.getItem2()
+  //          || triangle.getItem2() == otherTriangle.getItem3() && triangle.getItem2() && otherTriangle.getItem2()
+  //          || triangle.getItem3() == otherTriangle.getItem1() && triangle.getItem2() && otherTriangle.getItem2()
+  //          || triangle.getItem3() == otherTriangle.getItem2() && triangle.getItem2() && otherTriangle.getItem2()
+  //          || triangle.getItem3() == otherTriangle.getItem3() && triangle.getItem2() && otherTriangle.getItem2()
+  //          )
+  //           1, 1 && 2, 2
+  //           1, 2 && 2, 3
+  //           1, 3 && 2, 1
+
+  //           2, 1 && 3, 2
+  //           2, 2 && 3, 3
+  //           2, 3 && 3, 1
+
+  //           3, 1 && 1, 2
+  //           3, 2 && 1, 3
+  //           3, 3 && 1, 1
+
+  //       }
+  //     }
+
+//     }
+
+//       for each point in pointList do kk
+//          for each triangle in badTriangles do
+//             for each edge in triangle do
+//                if kk
+//                   add edge to polygon
+//          for each triangle in badTriangles do // remove them from the data structure
+//             remove triangle from triangulation
+//          for each edge in polygon do // re-triangulate the polygonal hole
+//             newTri := form a triangle from edge to point
+//             add newTri to triangulation
+//       for each triangle in triangulation // done inserting points, now clean up
+//          if triangle contains a vertex from original super-triangle
+//             remove triangle from triangulation
+//       return triangulation
 
 
 //  /**
