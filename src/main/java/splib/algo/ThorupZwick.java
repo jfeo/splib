@@ -20,17 +20,15 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
 
   private static final Double DELTA = 1e-10;
 
-  private Graph<V> G;
   private int k;
   private int heapArity;
   private ArrayList<ArrayList<V>> A;
 
   public ThorupZwick(Integer k, Graph<V> G, Integer heapArity) {
     this.k = k;
-    this.G = G;
     this.heapArity = heapArity;
     this.A = new ArrayList<ArrayList<V>>();
-    this.preprocess();
+    this.preprocess(G);
   }
 
   public ArrayList<ArrayList<V>> getA() {
@@ -48,15 +46,15 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
   /**
    * Preprocess a graph.
    */
-  private void preprocess() {
+  private void preprocess(Graph<V> G) {
 
     // initialize vertices for this constant k
-    for (V v : this.G.getVertices()) {
+    for (V v : G.getVertices()) {
       v.initialize(this.k);
     }
 
     this.A.add(new ArrayList<V>());
-    this.A.get(0).addAll(this.G.getVertices());
+    this.A.get(0).addAll(G.getVertices());
 
     // Compute i-centers
     for (int i = 1; i < k; i++) {
@@ -65,7 +63,7 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
       ArrayList<V> preA = this.A.get(i-1);
       ArrayList<V> curA = this.A.get(i);
 
-      double thresh = Math.pow(this.G.getVertices().size(),
+      double thresh = Math.pow(G.getVertices().size(),
                                0 - 1.0d / (double)this.k);
       for (V v : preA) {
         if (Math.random() < thresh) {
@@ -88,13 +86,13 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
       V s = (V)new TZSPVertex();
       s.initialize(this.k);
       for (V w : this.A.get(i)) {
-        this.G.addEdge(s, w, 0.0);
+        G.addEdge(s, w, 0.0);
         w.setWitness(i, w, 0.0);
       }
 
       // Perform SSSP from 'fake' vertex, and find witnesses of all vertices
-      Dijkstra.<V>singleSource(this.G, s, this.heapArity);
-      for (V v : this.G.getVertices()) {
+      Dijkstra.<V>singleSource(G, s, this.heapArity);
+      for (V v : G.getVertices()) {
         Pair<TZSPVertex, Double> preWitness = v.getWitness(i+1);
         if (Math.abs(v.getEstimate() - preWitness.getItem2()) < DELTA) { // double comparison
           v.setWitness(i, preWitness.getItem1(), v.getEstimate());
@@ -108,21 +106,21 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
           v.setWitness(i, candidate, v.getEstimate());
         }
       }
-      this.G.removeVertex(s);
+      G.removeVertex(s);
 
       // Compute clusters
       ArrayList<V> tmp = (ArrayList<V>)A.get(i).clone();
       tmp.removeAll(this.A.get(i+1));
       for (V w : tmp) {
-        for (V v : this.singleSource(w, i)) {
+        for (V v : this.singleSource(G, w, i)) {
           w.getCluster().put(v, v.getEstimate());
         }
       }
     }
 
     // Compute bunches
-    for (V v : this.G.getVertices()) {
-      for (V w : this.G.getVertices()) {
+    for (V v : G.getVertices()) {
+      for (V w : G.getVertices()) {
         if (w.getCluster().containsKey(v)) {
           v.getBunch().put(w, w.getCluster().get(v));
         }
@@ -161,8 +159,8 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
    * @param i The index of the A set.
    * @return The vertices.
    */
-  private ArrayList<V> singleSource(V s, int i) {
-    this.initializeSingleSource(s);
+  private ArrayList<V> singleSource(Graph<V> G, V s, int i) {
+    this.initializeSingleSource(G, s);
     ArrayList<V> S = new ArrayList<V>();
     Heap<V> Q = new Heap<V>((V v, V u) -> {
       return v.getEstimate().compareTo(u.getEstimate());
@@ -207,8 +205,8 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
    * @param G The graph to work on.
    * @param s The source vertex.
    */
-  private void initializeSingleSource(V s) {
-    for (V v : this.G.getVertices()) {
+  private void initializeSingleSource(Graph<V> G, V s) {
+    for (V v : G.getVertices()) {
       v.setEstimate(1.0f / 0.0f); // Infinity
       v.setPredecessor(null);
     }
