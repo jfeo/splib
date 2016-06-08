@@ -21,12 +21,15 @@ public class BenchmarkAstar {
 
     BenchmarkSuite.SinglePairAlgorithm<EuclidianSPVertex> astar = (Gr, vs, vt, a) -> Astar.<EuclidianSPVertex>singlePair(Gr, vs, vt, Astar::euclidianHeuristic, a);
 
-    BenchmarkSuite<EuclidianSPVertex> b = new BenchmarkSuite<EuclidianSPVertex>();
+    BenchmarkSuite<EuclidianSPVertex> b = new BenchmarkSuite<EuclidianSPVertex>(EuclidianSPVertex.class);
 
     int maxHeaps = 10;
 
-    for (int i = 150; i < 5000; i += 100) {
-      for (int d = 2; d < i; d += 70) {
+    int numBms = (5000-150)/50 * 10;
+    int curBm = 0;
+    for (int i = 50; i < 5000; i += 50) {
+      for (int d = 2; d < i; d += i/10) {
+        curBm++;
         Pair<Graph<EuclidianSPVertex>, ?> G
           = GraphCreator.<EuclidianSPVertex>euclidian(EuclidianSPVertex.class,
               100d, i, d);
@@ -37,6 +40,7 @@ public class BenchmarkAstar {
               G.getItem1().getVertices().get(0),
               G.getItem1().getVertices().get(1), a));
         }
+        System.err.println(curBm + "/" + numBms);
       }
     }
   }
