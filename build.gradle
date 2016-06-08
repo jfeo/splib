@@ -6,6 +6,12 @@ repositories {
 
 dependencies {
   testCompile "junit:junit:4.12"
+  compile 'com.github.jbellis:jamm:0.3.1'
+}
+
+task copyLibs(type: Copy) {
+    from configurations.compile
+    into 'lib'
 }
 
 test {
