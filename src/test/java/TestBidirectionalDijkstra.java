@@ -27,54 +27,56 @@ public class TestBidirectionalDijkstra {
   public void test_dijkstraCompare() throws IllegalAccessException, InstantiationException {
     int num = 1;
     for (int i = 100; i <= 1000; i += 100) {
-      for (int d = 3; d < 8; d++) {
+      for (int d = 3; d < i / 2; d += d) {
         Pair<Graph<BDDVertex>, ArrayList<Pair<Double, Double>>> euclidian = GraphCreator.euclidian(BDDVertex.class, 100, i, d);
         Graph<BDDVertex> G = euclidian.getItem1();
         BDDVertex s = G.getVertices().get(0);
-        BDDVertex t = G.getVertices().get(1);
 
-        Dijkstra.<BDDVertex>singleSource(G, s, 4);
-        ArrayList<BDDVertex> dijkstraPath = new ArrayList();
-        BDDVertex v = t;
-        while (v != null) {
-          dijkstraPath.add(v);
-          v = (BDDVertex)v.getPredecessor();
-        }
-        double dijkstraDistance = t.getEstimate();
+        for (int a = 2; a < 10; a++) {
+          BDDVertex t = G.getVertices().get(a);
+          Dijkstra.<BDDVertex>singleSource(G, s, a);
+          ArrayList<BDDVertex> dijkstraPath = new ArrayList();
+          BDDVertex v = t;
+          while (v != null) {
+            dijkstraPath.add(v);
+            v = (BDDVertex)v.getPredecessor();
+          }
+          double dijkstraDistance = t.getEstimate();
 
-        Pair<Double, BDDVertex> result = BidirectionalDijkstra.<BDDVertex>singlePair(G, s, t, 4);
+          Pair<Double, BDDVertex> result = BidirectionalDijkstra.<BDDVertex>singlePair(G, s, t, a);
 
         // Generate path as list of vertices
-        ArrayList<BDDVertex> bddPath = new ArrayList();
-        v = result.getItem2();
-        while (v != null) {
-          bddPath.add(v);
-          v = (BDDVertex)v.getPredecessor();
-        }
-        Collections.reverse(bddPath);
-        v = result.getItem2();
-        while (v != null) {
-          bddPath.add(v);
-          v = v.getSuccessor();
-        }
+        // ArrayList<BDDVertex> bddPath = new ArrayList();
+        // v = result.getItem2();
+        // while (v != null) {
+        //   bddPath.add(v);
+        //   v = (BDDVertex)v.getPredecessor();
+        // }
+        // Collections.reverse(bddPath);
+        // v = result.getItem2();
+        // while (v != null) {
+        //   bddPath.add(v);
+        //   v = v.getSuccessor();
+        // }
 
         // Graph dumping
-        String filename;
-        if (Math.abs(dijkstraDistance - result.getItem1()) > DELTA) {
-          dumpSVG();
-        }
+        // String filename;
+        // if (Math.abs(dijkstraDistance - result.getItem1()) > DELTA) {
+        //   dumpSVG();
+        // }
 
-        ArrayList<BDDVertex> bddSourceRelax = new ArrayList();
-        ArrayList<BDDVertex> bddTargetRelax = new ArrayList();
-        for (BDDVertex u : G.getVertices()) {
-          if (u.getPredecessor() != null)
-            bddSourceRelax.add(u);
-          if (u.getSuccessor() != null)
-            bddTargetRelax.add(u);
-        }
+        // ArrayList<BDDVertex> bddSourceRelax = new ArrayList();
+        // ArrayList<BDDVertex> bddTargetRelax = new ArrayList();
+        // for (BDDVertex u : G.getVertices()) {
+        //   if (u.getPredecessor() != null)
+        //     bddSourceRelax.add(u);
+        //   if (u.getSuccessor() != null)
+        //     bddTargetRelax.add(u);
+        // }
 
-        num++;
-        assertEquals(dijkstraDistance, result.getItem1(), DELTA);
+          num++;
+          assertEquals(dijkstraDistance, result.getItem1(), DELTA);
+        }
       }
     }
   }
