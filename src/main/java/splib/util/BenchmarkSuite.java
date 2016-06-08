@@ -139,7 +139,7 @@ public class BenchmarkSuite <V extends SPVertex> {
   public void runOraclePreprocessBenchmark(Output type,
       String name, Class<?> oClass, Triple<Graph<V>, Integer, Integer> args) {
     try {
-      Constructor ctor = oClass.getConstructor(Integer.class, Graph.class, Integer.class);
+      Constructor ctor = oClass.getConstructor(Integer.class);
 
       long ns = System.nanoTime();
       long ms = System.currentTimeMillis();
@@ -148,7 +148,8 @@ public class BenchmarkSuite <V extends SPVertex> {
       int edges = args.getItem1().getEdgeCount();
 
       MemoryMeter meter = new MemoryMeter();
-      Oracle or = (Oracle)ctor.newInstance(args.getItem2(), args.getItem1(), args.getItem3());
+      Oracle or = (Oracle)ctor.newInstance(args.getItem2());
+      or.preprocess(args.getItem1(), args.getItem3());
 
       long memory = meter.measureDeep(or);
 
@@ -172,6 +173,7 @@ public class BenchmarkSuite <V extends SPVertex> {
     } catch (InvocationTargetException | IllegalAccessException |
         NoSuchMethodException | InstantiationException ex) {
       // Ignore
+      System.out.println(ex.toString());
     }
   }
 

@@ -48,7 +48,8 @@ public class TestThorupZwick {
     G.addEdge(2, 3, 2.0);
     G.addEdge(3, 4, 1.0);
 
-    ThorupZwick tz = new ThorupZwick(k, G, 4);
+    ThorupZwick tz = new ThorupZwick(k);
+    tz.preprocess(G, k);
   }
 
   @Test
@@ -57,7 +58,8 @@ public class TestThorupZwick {
       Pair<Graph<TZSPVertex>, ArrayList<Pair<Double, Double>>> euclidian = GraphCreator.euclidian(TZSPVertex.class, 100d, i, 5);
       Graph<TZSPVertex> G = euclidian.getItem1();
       for (int k = 3; k < 7; k++) {
-        ThorupZwick tz = new ThorupZwick<TZSPVertex>(k, G, 4);
+        ThorupZwick tz = new ThorupZwick<TZSPVertex>(k);
+        ArrayList<ArrayList<TZSPVertex>> A = tz.preprocess(G, 4);
 
         for (int u = 0; u < G.getVertexCount(); u++){
           TZSPVertex s = G.getVertices().get(u);
@@ -69,7 +71,7 @@ public class TestThorupZwick {
             try {
                tzlength = tz.query(s, t);
             } catch (Exception ex) {
-              querySVG(G, euclidian.getItem2(), tz, s, t);
+              querySVG(G, euclidian.getItem2(), A, k, tz, s, t);
               throw ex;
             }
 
@@ -81,7 +83,7 @@ public class TestThorupZwick {
     }
   }
 
-  public void querySVG(Graph<TZSPVertex> G, ArrayList<Pair<Double,Double>> positions, ThorupZwick oracle, TZSPVertex s, TZSPVertex t) {
+  public void querySVG(Graph<TZSPVertex> G, ArrayList<Pair<Double,Double>> positions, ArrayList<ArrayList<TZSPVertex>> A, int k, ThorupZwick oracle, TZSPVertex s, TZSPVertex t) {
     // Drawing styles
     List<GraphDrawer.SVGElement> AElements = new ArrayList<GraphDrawer.SVGElement>(){{
       add(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.white, 1d, 1d, 6d));
@@ -92,13 +94,13 @@ public class TestThorupZwick {
       add(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.black, 1d, 1d, 2d));
     }};
 
-    ArrayList<ArrayList<TZSPVertex>> A = new ArrayList<ArrayList<TZSPVertex>>();
+    ArrayList<ArrayList<TZSPVertex>> A_exclusive = new ArrayList<ArrayList<TZSPVertex>>();
     ArrayList<TZSPVertex> witnesses = new ArrayList<TZSPVertex>();
 
     ArrayList<Pair<GraphDrawer.SVGElement, List<TZSPVertex>>> vertexMarkLists = new ArrayList();
-    for (int j = 0; j < oracle.getK(); j++) {
-      A.add(new ArrayList<TZSPVertex>((ArrayList<TZSPVertex>)oracle.getA().get(j)));
-      A.get(j).removeAll((ArrayList<TZSPVertex>)oracle.getA().get(j+1));
+    for (int j = 0; j < k; j++) {
+      A_exclusive.add(new ArrayList<TZSPVertex>(A.get(j)));
+      A_exclusive.get(j).removeAll(A.get(j+1));
     }
 
     // mock query, for debugging
@@ -111,7 +113,7 @@ public class TestThorupZwick {
 
       ArrayList<Pair<GraphDrawer.SVGElement, List<TZSPVertex>>> vmls = new ArrayList();
       for (int j = 0; j < oracle.getK(); j++) {
-        vmls.add(new Pair(AElements.get(j), A.get(j)));
+        vmls.add(new Pair(AElements.get(j), A_exclusive.get(j)));
       }
 
       ArrayList<TZSPVertex> vp = new ArrayList<TZSPVertex>();
@@ -149,6 +151,7 @@ public class TestThorupZwick {
           G, positions,
           new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
           vmls, vpls);
+
       TZSPVertex vSwap = v;
       v = u;
       u = vSwap;

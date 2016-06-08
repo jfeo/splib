@@ -21,26 +21,21 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
   private static final Double DELTA = 1e-10;
 
   private int k;
-  private int heapArity;
 
-  public ThorupZwick(Integer k, Graph<V> G, Integer heapArity) {
+  public ThorupZwick(Integer k) {
     this.k = k;
-    this.heapArity = heapArity;
   }
 
   public int getK() {
     return k;
   }
 
-  public int getHeapArity() {
-    return heapArity;
-  }
-
   /**
    * Preprocess a graph.
    */
-  private ArrayList<ArrayList<V>> preprocess(Graph<V> G) {
+  public ArrayList<ArrayList<V>> preprocess(Graph<V> G, int heapArity) {
     ArrayList<ArrayList<V>> A = new ArrayList<ArrayList<V>>();
+
     // initialize vertices for this constant k
     for (V v : G.getVertices()) {
       v.initialize(this.k);
@@ -84,7 +79,7 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
       }
 
       // Perform SSSP from 'fake' vertex, and find witnesses of all vertices
-      Dijkstra.<V>singleSource(G, s, this.heapArity);
+      Dijkstra.<V>singleSource(G, s, heapArity);
       for (V v : G.getVertices()) {
         Pair<TZSPVertex, Double> preWitness = v.getWitness(i+1);
         if (Math.abs(v.getEstimate() - preWitness.getItem2()) < DELTA) { // double comparison
@@ -105,7 +100,7 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
       ArrayList<V> tmp = (ArrayList<V>)A.get(i).clone();
       tmp.removeAll(A.get(i+1));
       for (V w : tmp) {
-        for (V v : this.singleSource(G, w, i)) {
+        for (V v : this.singleSource(G, w, i, heapArity)) {
           w.getCluster().put(v, v.getEstimate());
         }
       }
@@ -121,7 +116,7 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
     }
 
     for (V v : G.getVertices()) {
-      v.getBunch().clear();
+      v.getCluster().clear();
     }
 
     return A;
@@ -158,12 +153,12 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
    * @param i The index of the A set.
    * @return The vertices.
    */
-  private ArrayList<V> singleSource(Graph<V> G, V s, int i) {
+  private ArrayList<V> singleSource(Graph<V> G, V s, int i, int heapArity) {
     this.initializeSingleSource(G, s);
     ArrayList<V> S = new ArrayList<V>();
     Heap<V> Q = new Heap<V>((V v, V u) -> {
       return v.getEstimate().compareTo(u.getEstimate());
-    }, this.heapArity);
+    }, heapArity);
 
     Q.insert(s);
 

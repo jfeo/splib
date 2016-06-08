@@ -24,7 +24,8 @@ public class BenchmarkThorupZwickQuery {
         Pair<Graph<TZSPVertex>, ?> G = GraphCreator.<TZSPVertex>euclidian(TZSPVertex.class, 100d, i, 4);
         for (int k = 3; k < 10; k++) {
           for (int a = 3; a < 10; a++) {
-            ThorupZwick tz = new ThorupZwick(k, G.getItem1(), a);
+            ThorupZwick tz = new ThorupZwick(k);
+            tz.preprocess(G.getItem1(), a);
             b.runOracleQueryBenchmark(BenchmarkSuite.Output.CSV,
                 "Thorup Zwick Query", tz, G.getItem1());
           }
