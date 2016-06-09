@@ -3,7 +3,6 @@ package splib.algo;
 
 import splib.data.Graph;
 import splib.data.SPVertex;
-import splib.data.TZSPVertex;
 import splib.algo.Oracle;
 import splib.data.Vertex;
 import splib.util.Heap;
@@ -16,11 +15,13 @@ import java.util.Random;
 import java.lang.Math;
 
 
-public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
+public class ThorupZwick <V extends SPVertex> implements Oracle<V> {
 
   private static final Double DELTA = 1e-10;
 
   private int k;
+  private ArrayList<ArrayList<Pair<Integer, Double>>> witnesses;
+  private ArrayList<HashMap<Integer, Double>> bunches;
 
   public ThorupZwick(Integer k) {
     this.k = k;
@@ -30,30 +31,46 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
     return k;
   }
 
+  public HashMap<Integer, Double> getBunch(int v) {
+    return this.bunches.get(v);
+  }
+
+  public Pair<Integer, Double> getWitness(int v, int i) {
+    return this.witnesses.get(v).get(i);
+  }
+
   /**
    * Preprocess a graph.
    */
-  public ArrayList<ArrayList<V>> preprocess(Graph<V> G, int heapArity) {
-    ArrayList<ArrayList<V>> A = new ArrayList<ArrayList<V>>();
+  public ArrayList<ArrayList<Integer>> preprocess(Graph<V> G, int heapArity) {
+    ArrayList<ArrayList<Integer>> A = new ArrayList<ArrayList<Integer>>();
+    A.add(new ArrayList<Integer>());
 
     // initialize vertices for this constant k
-    for (V v : G.getVertices()) {
-      v.initialize(this.k);
+    ArrayList<HashMap<Integer, Double>> clusters = new ArrayList<HashMap<Integer, Double>>();
+    this.witnesses = new ArrayList<ArrayList<Pair<Integer, Double>>>();
+    this.bunches = new ArrayList<HashMap<Integer, Double>>();
+    for (int v = 0; v < G.getVertexCount(); v++) {
+      this.witnesses.add(new ArrayList<Pair<Integer, Double>>());
+      for (int i = 0; i < k; i++) {
+        this.witnesses.get(v).add(new Pair(null, null));
+      }
+      this.witnesses.get(v).add(new Pair(null, 1d/0d));
+      this.bunches.add(new HashMap<Integer, Double>());
+      clusters.add(new HashMap<Integer, Double>());
+      A.get(0).add(v);
     }
-
-    A.add(new ArrayList<V>());
-    A.get(0).addAll(G.getVertices());
 
     // Compute i-centers
     for (int i = 1; i < k; i++) {
-      A.add(new ArrayList<V>());
+      A.add(new ArrayList<Integer>());
 
-      ArrayList<V> preA = A.get(i-1);
-      ArrayList<V> curA = A.get(i);
+      ArrayList<Integer> preA = A.get(i-1);
+      ArrayList<Integer> curA = A.get(i);
 
-      double thresh = Math.pow(G.getVertices().size(),
+      double thresh = Math.pow(G.getVertexCount(),
                                0 - 1.0d / (double)this.k);
-      for (V v : preA) {
+      for (Integer v : preA) {
         if (Math.random() < thresh) {
           curA.add(v);
         }
@@ -65,58 +82,53 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
         continue;
       }
     }
-    A.add(new ArrayList<V>());
+    A.add(new ArrayList<Integer>());
 
     // Compute clusters
     for (int i = k - 1; i >= 0; i--) {
       // Compute witnesses
       // Insert 'fake' vertex with 0 edges to vertices in A_i, for SSSP
-      V s = (V)new TZSPVertex();
-      s.initialize(this.k);
-      for (V w : A.get(i)) {
+      int s = G.addVertex((V)new SPVertex());
+      for (Integer w : A.get(i)) {
         G.addEdge(s, w, 0.0);
-        w.setWitness(i, w, 0.0);
+        this.witnesses.get(w).set(i, new Pair(w, 0.0));
       }
 
       // Perform SSSP from 'fake' vertex, and find witnesses of all vertices
       Dijkstra.<V>singleSource(G, s, heapArity);
-      for (V v : G.getVertices()) {
-        Pair<TZSPVertex, Double> preWitness = v.getWitness(i+1);
-        if (Math.abs(v.getEstimate() - preWitness.getItem2()) < DELTA) { // double comparison
-          v.setWitness(i, preWitness.getItem1(), v.getEstimate());
+      for (int v = 0; v < G.getVertexCount() - 1; v++) {
+        Pair<Integer, Double> preWitness = this.witnesses.get(v).get(i+1);
+        if (Math.abs(G.getVertex(v).getEstimate() - preWitness.getItem2()) < DELTA) { // double comparison
+          this.witnesses.get(v).set(i, new Pair(preWitness.getItem1(), G.getVertex(v).getEstimate()));
         } else {
-          V candidate = v;
+          int cand = v;
           // follow the path back to the i-center, in order to find the closest
           // member of A_i to set as witness
-          while (candidate.getPredecessor() != s && candidate.getPredecessor() != null) {
-            candidate = (V)candidate.getPredecessor();
+          while (G.getVertex(cand).getPredecessor() != null && G.getVertex(cand).getPredecessor() != s) {
+            cand = G.getVertex(cand).getPredecessor();
           }
-          v.setWitness(i, candidate, v.getEstimate());
+          this.witnesses.get(v).set(i, new Pair(cand, G.getVertex(v).getEstimate()));
         }
       }
-      G.removeVertex(s);
+      G.popVertex();
 
       // Compute clusters
-      ArrayList<V> tmp = (ArrayList<V>)A.get(i).clone();
+      ArrayList<Integer> tmp = (ArrayList<Integer>)A.get(i).clone();
       tmp.removeAll(A.get(i+1));
-      for (V w : tmp) {
-        for (V v : this.singleSource(G, w, i, heapArity)) {
-          w.getCluster().put(v, v.getEstimate());
+      for (Integer w : tmp) {
+        for (Integer v : this.singleSource(G, w, i, heapArity)) {
+          clusters.get(w).put(v, G.getVertex(v).getEstimate());
         }
       }
     }
 
     // Compute bunches
-    for (V v : G.getVertices()) {
-      for (V w : G.getVertices()) {
-        if (w.getCluster().containsKey(v)) {
-          v.getBunch().put(w, w.getCluster().get(v));
+    for (int v = 0; v < G.getVertexCount(); v++) {
+      for (int w = 0; w < G.getVertexCount(); w++) {
+        if (clusters.get(w).containsKey(v)) {
+          this.bunches.get(v).put(w, clusters.get(w).get(v));
         }
       }
-    }
-
-    for (V v : G.getVertices()) {
-      v.getCluster().clear();
     }
 
     return A;
@@ -128,22 +140,22 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
    * @param u The vertex on one end of the path.
    * @param v The vertex on the other end of the path.
    */
-  public Double query(V u, V v) {
-    V w = u;
+  public Double query(int u, int v) {
+    int w = u;
 
     int i = 0;
-    while (!v.getBunch().containsKey(w)) {
+    while (!this.bunches.get(v).containsKey(w)) {
       i++;
       if (i == this.k) {
         return 1d / 0d;
       }
-      V vSwap = v;
+      int vSwap = v;
       v = u;
       u = vSwap;
-      w = (V)u.getWitness(i).getItem1();
+      w = this.witnesses.get(u).get(i).getItem1();
     }
 
-    return u.getWitness(i).getItem2() + v.getBunch().get(w);
+    return this.witnesses.get(u).get(i).getItem2() + this.bunches.get(v).get(w);
   }
 
 
@@ -153,21 +165,21 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
    * @param i The index of the A set.
    * @return The vertices.
    */
-  private ArrayList<V> singleSource(Graph<V> G, V s, int i, int heapArity) {
+  private ArrayList<Integer> singleSource(Graph<V> G, int s, int i, int heapArity) {
     this.initializeSingleSource(G, s);
-    ArrayList<V> S = new ArrayList<V>();
-    Heap<V> Q = new Heap<V>((V v, V u) -> {
-      return v.getEstimate().compareTo(u.getEstimate());
+    ArrayList<Integer> S = new ArrayList<Integer>();
+    Heap<Integer> Q = new Heap<Integer>((v, u) -> {
+      return G.getVertex(v).getEstimate().compareTo(G.getVertex(u).getEstimate());
     }, heapArity);
 
     Q.insert(s);
 
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
-      V u = Q.extract();
+      Integer u = Q.extract();
       S.add(u);
-      for (Pair<Vertex, Double> v : u.getAdjacency()) {
-        this.relax(Q, u, (V)v.getItem1(), v.getItem2(), i);
+      for (Pair<Integer, Double> edge : G.getAdjacency(u)) {
+        this.relax(G, Q, u, edge.getItem1(), edge.getItem2(), i);
       }
     }
     return S;
@@ -181,12 +193,12 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
    * @param v The second vertex.
    * @param weight The weight of the edge between the first and the second vertex.
    */
-  private void relax(Heap<V> Q, V u, V v, double weight, int i) {
-    double newEstimate = u.getEstimate() + weight;
-    if (newEstimate < v.getEstimate()
-        && newEstimate < v.getWitness(i+1).getItem2()) {
-      v.setPredecessor(u);
-      v.setEstimate(newEstimate);
+  private void relax(Graph<V> G, Heap<Integer> Q, int u, int v, double weight, int i) {
+    double newEstimate = G.getVertex(u).getEstimate() + weight;
+    if (newEstimate < G.getVertex(v).getEstimate()
+        && newEstimate < this.witnesses.get(v).get(i+1).getItem2()) {
+      G.getVertex(v).setPredecessor(u);
+      G.getVertex(v).setEstimate(newEstimate);
       Q.insert(v);
     }
   }
@@ -199,12 +211,12 @@ public class ThorupZwick <V extends TZSPVertex> implements Oracle<V> {
    * @param G The graph to work on.
    * @param s The source vertex.
    */
-  private void initializeSingleSource(Graph<V> G, V s) {
-    for (V v : G.getVertices()) {
-      v.setEstimate(1.0f / 0.0f); // Infinity
-      v.setPredecessor(null);
+  private void initializeSingleSource(Graph<V> G, Integer s) {
+    for (int v = 0; v < G.getVertexCount(); v++) {
+      G.getVertex(v).setEstimate(1.0f / 0.0f); // Infinity
+      G.getVertex(v).setPredecessor(null);
     }
-    s.setEstimate(0);
+    G.getVertex(s).setEstimate(0);
   }
 
 

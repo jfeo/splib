@@ -46,20 +46,17 @@ public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V> vC
   }
 
   for (int i = 0; i < graph.getVertexCount(); i++) {
-    U v = graph.getVertices().get(i);
-    for (Pair<Vertex, Double> edge : v.getAdjacency()) {
+    for (Pair<Integer, Double> edge : G.getAdjacency(i)) {
       boolean exists = false;
-      int j = graph.getVertices().indexOf(edge.getItem1());
-      for (Pair<Vertex, ?> edge2 : G.getVertices().get(j).getAdjacency()) {
-        if (edge2.getItem1() == G.getVertices().get(i)) {
+      int j = edge.getItem1();
+      for (Pair<Integer, ?> edge2 : G.getAdjacency(i)) {
+        if (edge2.getItem1() == i) {
           exists = true;
         }
       }
-
       if (!exists) {
         G.addEdge(i, j, edge.getItem2());
       }
-
     }
   }
 
@@ -149,40 +146,39 @@ public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V> vC
       G.addVertex(v);
     }
 
-    for (int i = 0; i < G.getVertices().size(); i++) {
-      V v = (V)G.getVertices().get(i);
+    for (int i = 0; i < G.getVertexCount(); i++) {
       Pair<Double, Double> vPos = positions.get(i);
+
       // We work with squared distances for simplicity
-      Heap<Pair<V, Double>> sqdists =
-        new Heap<Pair<V, Double>>((p1, p2) ->
+      Heap<Pair<Integer, Double>> sqdists =
+        new Heap<Pair<Integer, Double>>((p1, p2) ->
           p1.getItem2().compareTo(p2.getItem2()), 2);
 
-      for (int j = 0; j < G.getVertices().size(); j++) {
-        V u = (V)G.getVertices().get(j);
+      for (int j = 0; j < G.getVertexCount(); j++) {
         Pair<Double, Double> uPos = positions.get(j);
         double sqd = Math.pow(vPos.getItem1()
                             - uPos.getItem1(), 2)
                    + Math.pow(vPos.getItem2()
                             - uPos.getItem2(), 2);
-        sqdists.insert(new Pair(u, Math.sqrt(sqd)));
+        sqdists.insert(new Pair(j, Math.sqrt(sqd)));
       }
 
-      for (int j = v.getAdjacency().size(); j < degree; j++) {
-        Pair<V, Double> d;
+      for (int j = G.getAdjacency(i).size(); j < degree; j++) {
+        Pair<Integer, Double> d;
 
         // add only new edges
         boolean exists = true;
         while (exists) {
           d = sqdists.extract();
-          if (d.getItem1() == v) {
+          if (d.getItem1() == i) {
             continue;
           }
           exists = false;
-          for (Pair<Vertex, Double> adj : v.getAdjacency()) {
-            exists = exists || (V)adj.getItem1() == d.getItem1();
+          for (Pair<Integer, Double> adj : G.getAdjacency(i)) {
+            exists = exists || adj.getItem1() == d.getItem1();
           }
           if (!exists) {
-            G.addEdge(v, d.getItem1(), d.getItem2());
+            G.addEdge(i, d.getItem1(), d.getItem2());
           }
         }
       }
