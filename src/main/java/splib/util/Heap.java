@@ -35,7 +35,7 @@ public class Heap<E> {
 
     this.arity = arity;
     this.comparator = c;
-    this.elements = new ArrayList<E>();
+    this.elements = new ArrayList<Pair<E, Index>>();
     this.indices = new ArrayList<Integer>();
   }
 
@@ -89,10 +89,11 @@ public class Heap<E> {
    * @param element The element to be inserted.
    * @param key The key value for the element.
    */
-  public Integer insert(E element, Index idx) {
+  public Index insert(E element, Index idx) {
     idx.setValue(elements.size());
     this.elements.add(Pair(element, idx));
     this.changeKey(this.elements.size() - 1);
+    return idx;
   }
 
   /**
