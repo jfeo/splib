@@ -30,20 +30,18 @@ public class TestBidirectionalDijkstra {
       for (int d = 3; d < i / 2; d += d) {
         Pair<Graph<BDDVertex>, ArrayList<Pair<Double, Double>>> euclidian = GraphCreator.euclidian(BDDVertex.class, 100, i, d);
         Graph<BDDVertex> G = euclidian.getItem1();
-        BDDVertex s = G.getVertices().get(0);
 
         for (int a = 2; a < 10; a++) {
-          BDDVertex t = G.getVertices().get(a);
-          Dijkstra.<BDDVertex>singleSource(G, s, a);
-          ArrayList<BDDVertex> dijkstraPath = new ArrayList();
-          BDDVertex v = t;
-          while (v != null) {
-            dijkstraPath.add(v);
-            v = (BDDVertex)v.getPredecessor();
-          }
-          double dijkstraDistance = t.getEstimate();
+          Dijkstra.<BDDVertex>singleSource(G, 0, a);
+          // ArrayList<BDDVertex> dijkstraPath = new ArrayList();
+          // BDDVertex v = t;
+          // while (v != null) {
+          //   dijkstraPath.add(v);
+          //   v = (BDDVertex)v.getPredecessor();
+          // }
+          double dijkstraDistance = G.getVertex(1).getEstimate();
 
-          Pair<Double, BDDVertex> result = BidirectionalDijkstra.<BDDVertex>singlePair(G, s, t, a);
+          Pair<Double, Integer> result = BidirectionalDijkstra.<BDDVertex>singlePair(G, 0, 1, a);
 
         // Generate path as list of vertices
         // ArrayList<BDDVertex> bddPath = new ArrayList();

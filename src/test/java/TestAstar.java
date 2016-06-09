@@ -34,31 +34,31 @@ public class TestAstar {
       for (int d = 4; d < 16; d += 4) {
         Pair<Graph<EuclidianSPVertex>, ArrayList<Pair<Double, Double>>> euclidian = GraphCreator.euclidian(EuclidianSPVertex.class, 100, i, d);
         Graph<EuclidianSPVertex> G = euclidian.getItem1();
-        EuclidianSPVertex s = G.getVertices().get(0);
-        EuclidianSPVertex t = G.getVertices().get(1);
+        int s = 0;
+        int t = 1;
 
         Dijkstra.<EuclidianSPVertex>singleSource(G, s, 4);
         ArrayList<EuclidianSPVertex> dijkstraPath = new ArrayList();
 
         // Extract the path found by Dijkstra
-        EuclidianSPVertex v = t;
+        Integer v = t;
         while (v != null) {
-          dijkstraPath.add(v);
-          v = (EuclidianSPVertex)v.getPredecessor();
+          dijkstraPath.add(G.getVertex(v));
+          v = G.getVertex(v).getPredecessor();
         }
-        dijkstraDistance = t.getEstimate();
+        dijkstraDistance = G.getVertex(t).getEstimate();
 
-        astarDistance = Astar.<EuclidianSPVertex>singlePair(G, s, t, Astar::euclidianHeuristic, 4);
+        astarDistance = Astar.<EuclidianSPVertex>singlePair(G, s, t, Astar.euclidianHeuristic(G.getVertex(t)), 4);
         // Generate path as list of vertices
-        ArrayList<EuclidianSPVertex> astarPath = new ArrayList();
+        ArrayList<Integer> astarPath = new ArrayList();
         v = t;
         while (v != null) {
           astarPath.add(v);
-          v = (EuclidianSPVertex)v.getPredecessor();
+          v = G.getVertex(v).getPredecessor();
         }
-        ArrayList<EuclidianSPVertex> astarRelax = new ArrayList();
-        for (EuclidianSPVertex u : G.getVertices()) {
-          if (u.getPredecessor() != null) {
+        ArrayList<Integer> astarRelax = new ArrayList();
+        for (int u = 0; u < G.getVertexCount(); u++) {
+          if (G.getVertex(u).getPredecessor() != null) {
             astarRelax.add(u);
           }
         }
