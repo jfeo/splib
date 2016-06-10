@@ -37,33 +37,46 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class GraphCreator {
 
-public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V> vClass, Graph<U> graph, ArrayList<Pair<Double, Double>> positions)  throws InstantiationException, IllegalAccessException {
-  Graph<V> G = new Graph<V>();
+public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V>
+    vClass, Graph<U> graph, ArrayList<Pair<Double, Double>> positions)  throws
+  InstantiationException, IllegalAccessException {
 
+  Graph<V> G = new Graph<V>();
 
   for (int i = 0; i < graph.getVertexCount(); i++) {
     G.addVertex(vClass.newInstance());
   }
 
   for (int i = 0; i < graph.getVertexCount(); i++) {
-    for (Pair<Integer, Double> edge : G.getAdjacency(i)) {
-      boolean exists = false;
-      int j = edge.getItem1();
-      for (Pair<Integer, ?> edge2 : G.getAdjacency(i)) {
-        if (edge2.getItem1() == i) {
-          exists = true;
-        }
+    for (Pair<Integer, Double> e : graph.getAdjacency(i)) {
+      boolean existsInG = false;
+      for (Pair<Integer, ?> f : G.getAdjacency(e.getItem1())) {
+        existsInG = existsInG || f.getItem1().equals(i);
       }
-      if (!exists) {
-        G.addEdge(i, j, edge.getItem2());
+      if (!existsInG) {
+        G.addEdge(i, e.getItem1(), e.getItem2());
       }
     }
+
+
+    // for (Pair<Integer, Double> edge : graph.getAdjacency(i)) {
+    //   boolean exists = false;
+    //   int j = edge.getItem1();
+    //   for (Pair<Integer, ?> edge2 : G.getAdjacency(j)) {
+    //     if (edge2.getItem1() == i) {
+    //       exists = true;
+    //     }
+    //   }
+    //   if (!exists) {
+    //     G.addEdge(i, j, edge.getItem2());
+    //   }
+    // }
   }
 
   if (EuclidianSPVertex.class.isAssignableFrom(vClass))  {
     for (int i = 0; i < G.getVertexCount(); i++) {
       Pair<Double, Double> position = positions.get(i);
-      ((EuclidianSPVertex)G.getVertices().get(i)).setPosition(position.getItem1(), position.getItem2());
+      ((EuclidianSPVertex)G.getVertex(i)).setPosition(position.getItem1(), position.getItem2());
     }
   }
 
@@ -170,12 +183,15 @@ public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V> vC
         boolean exists = true;
         while (exists) {
           d = sqdists.extract();
-          if (d.getItem1() == i) {
+          if (d.getItem1().intValue() == i) {
             continue;
           }
           exists = false;
           for (Pair<Integer, Double> adj : G.getAdjacency(i)) {
-            exists = exists || adj.getItem1() == d.getItem1();
+            exists = exists || adj.getItem1().equals(d.getItem1());
+          }
+          for (Pair<Integer, Double> adj : G.getAdjacency(d.getItem1())) {
+            exists = exists || adj.getItem1().intValue() == i;
           }
           if (!exists) {
             G.addEdge(i, d.getItem1(), d.getItem2());

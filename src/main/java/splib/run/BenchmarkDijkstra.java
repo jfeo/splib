@@ -34,13 +34,13 @@ public class BenchmarkDijkstra {
     int numHeaps = 10;
 
 
-    for (int i = 150; i < 5000; i += 150) {
-      for (int d = 2; d < i / 2; d *= 3) {
+    for (int i = 5000; i > 0; i += 250) {
+      for (int d = 2; d < i / 3; d *= 3) {
         Pair<Graph<SPVertex>, ?> G1 = GraphCreator.<SPVertex>euclidian(SPVertex.class, 100d, i, d);
         for (int a = 2; a <= numHeaps; a++) {
           b.runSingleSourceBenchmark(BenchmarkSuite.Output.CSV,
               "Dijkstra, " + a + "-ary Heap", Dijkstra::singleSource,
-              new Triple(G1.getItem1(), G1.getItem1().getVertices().get(10), a));
+              new Triple(G1.getItem1(), 0, a));
         }
       }
     }

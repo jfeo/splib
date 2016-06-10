@@ -30,47 +30,19 @@ public class TestAstar {
     double dijkstraDistance;
 
     int num = 1;
-    for (int i = 200; i <= 1000; i += 200) {
-      for (int d = 4; d < 16; d += 4) {
+    for (int i = 1000; i > 0; i -= 250) {
+      for (int d = 2; d < i / 3; d *= 3) {
         Pair<Graph<EuclidianSPVertex>, ArrayList<Pair<Double, Double>>> euclidian = GraphCreator.euclidian(EuclidianSPVertex.class, 100, i, d);
         Graph<EuclidianSPVertex> G = euclidian.getItem1();
         int s = 0;
         int t = 1;
 
         Dijkstra.<EuclidianSPVertex>singleSource(G, s, 4);
-        ArrayList<EuclidianSPVertex> dijkstraPath = new ArrayList();
+        ArrayList<Integer> dijkstraPath = new ArrayList();
 
-        // Extract the path found by Dijkstra
-        Integer v = t;
-        while (v != null) {
-          dijkstraPath.add(G.getVertex(v));
-          v = G.getVertex(v).getPredecessor();
-        }
         dijkstraDistance = G.getVertex(t).getEstimate();
-
         astarDistance = Astar.<EuclidianSPVertex>singlePair(G, s, t, Astar.euclidianHeuristic(G.getVertex(t)), 4);
-        // Generate path as list of vertices
-        ArrayList<Integer> astarPath = new ArrayList();
-        v = t;
-        while (v != null) {
-          astarPath.add(v);
-          v = G.getVertex(v).getPredecessor();
-        }
-        ArrayList<Integer> astarRelax = new ArrayList();
-        for (int u = 0; u < G.getVertexCount(); u++) {
-          if (G.getVertex(u).getPredecessor() != null) {
-            astarRelax.add(u);
-          }
-        }
 
-
-        // Graph dumping
-        String filename;
-        if (Math.abs(dijkstraDistance - astarDistance) > DELTA) {
-          dumpSVG();
-        }
-
-        num++;
         assertEquals(dijkstraDistance, astarDistance, DELTA);
       }
     }
@@ -78,18 +50,18 @@ public class TestAstar {
   }
 
   public void dumpSVG() {
-    // GraphDrawer.<EuclidianSPVertex>graphSVG(100, filename, G, euclidian.getItem2(),
-    //   new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
-    //   new ArrayList<Pair<GraphDrawer.SVGElement, List<EuclidianSPVertex>>>(){{
-    //     add(new Pair(new GraphDrawer.SVGElement("circle", null, 0d, Color.white, 1d, 1d, 1d), astarRelax));
-    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.yellow, 1d, 1d, 3d),
-    //       new ArrayList<EuclidianSPVertex>(){{add(s);}}));
-    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.red, 1d, 1d, 3d),
-    //       new ArrayList<EuclidianSPVertex>(){{add(t);}}));
-    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.blue, 1d, null, 0d, 1d, 7d), astarPath));
-    //     add(new Pair(new GraphDrawer.SVGElement("circle", Color.green, 1d, null, 0d, 1d, 8d), dijkstraPath));
-    //   }},
-    //   new ArrayList());
+    GraphDrawer.<EuclidianSPVertex>graphSVG(100, "astar"+i+"_"+d+".svg", G, euclidian.getItem2(),
+      new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
+      new ArrayList<Pair<GraphDrawer.SVGElement, List<Integer>>>(){{
+        add(new Pair(new GraphDrawer.SVGElement("circle", null, 0d, Color.white, 1d, 1d, 1d), astarRelax));
+        add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.yellow, 1d, 1d, 3d),
+          new ArrayList<Integer>(){{add(s);}}));
+        add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.red, 1d, 1d, 3d),
+          new ArrayList<Integer>(){{add(t);}}));
+        add(new Pair(new GraphDrawer.SVGElement("circle", Color.blue, 1d, null, 0d, 1d, 7d), astarPath));
+        add(new Pair(new GraphDrawer.SVGElement("circle", Color.green, 1d, null, 0d, 1d, 8d), dijkstraPath));
+      }}, new ArrayList());
+
   }
 
 }

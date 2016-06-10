@@ -9,9 +9,16 @@ import splib.util.Quad;
 import splib.data.Graph;
 import splib.data.SPVertex;
 import splib.data.BDDVertex;
+import splib.data.EuclidianSPVertex;
 import splib.algo.Oracle;
 import splib.algo.Dijkstra;
 import java.lang.reflect.InvocationTargetException;
+
+import java.util.List;
+import splib.util.GraphDrawer;
+import splib.util.GraphDrawer.SVGElement;
+import java.awt.Color;
+
 import org.github.jamm.*;
 
 
@@ -81,23 +88,55 @@ public class BenchmarkSuite <V extends SPVertex> {
 
   public void runSinglePairBenchmark(Output type, String name,
         SinglePairAlgorithm<V> algo, Quad<Graph<V>, Integer, Integer, Integer> args) {
+      Graph<V> G = args.getItem1();
       long ns = System.nanoTime();
       long ms = System.currentTimeMillis();
-      algo.<V>spsp(args.getItem1(), args.getItem2(), args.getItem3(), args.getItem4());
+      algo.<V>spsp(G, args.getItem2(), args.getItem3(), args.getItem4());
       ns = System.nanoTime() - ns;
       ms = System.currentTimeMillis() - ms;
 
       int relaxed = 0;
       // count relaxed vertices
-      for (V v : args.getItem1().getVertices()) {
+      for (int i = 0; i < G.getVertexCount(); i++) {
         if (BDDVertex.class.isAssignableFrom(vClass)) {
-          if (((BDDVertex)v).getSuccessor() != null || v.getPredecessor() != null) {
+          if (((BDDVertex)G.getVertex(i)).getSuccessor() != null || G.getVertex(i).getPredecessor() != null) {
             relaxed++;
           }
         } else {
-          if (v.getPredecessor() != null) {
+          if (G.getVertex(i).getPredecessor() != null) {
             relaxed++;
           }
+        }
+      }
+
+      if (EuclidianSPVertex.class.isAssignableFrom(vClass)) {
+        if (relaxed + 1 == G.getVertexCount()) {
+          // Generate path as list of vertices
+          ArrayList<Integer> astarPath = new ArrayList();
+          Integer v = args.getItem3();
+          while (v != null) {
+            astarPath.add(v);
+            v = G.getVertex(v).getPredecessor();
+          }
+          ArrayList<Integer> astarRelax = new ArrayList();
+          ArrayList<Pair<Double, Double>> positions = new ArrayList<Pair<Double, Double>>();
+          for (int u = 0; u < G.getVertexCount(); u++) {
+            if (G.getVertex(u).getPredecessor() != null) {
+              astarRelax.add(u);
+            }
+            positions.add(((EuclidianSPVertex)G.getVertex(u)).getPosition());
+          }
+
+          GraphDrawer.<V>graphSVG(100, "sp"+G.getVertexCount()+"_"+G.getEdgeCount()+"_"+args.getItem3()+"_"+args.getItem4()+".svg", G, positions,
+            new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
+            new ArrayList<Pair<GraphDrawer.SVGElement, List<Integer>>>(){{
+              add(new Pair(new GraphDrawer.SVGElement("circle", null, 0d, Color.white, 1d, 1d, 1d), astarRelax));
+              add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.yellow, 1d, 1d, 3d),
+                new ArrayList<Integer>(){{add(args.getItem2());}}));
+              add(new Pair(new GraphDrawer.SVGElement("circle", Color.black, 1d, Color.red, 1d, 1d, 3d),
+                new ArrayList<Integer>(){{add(args.getItem3());}}));
+              add(new Pair(new GraphDrawer.SVGElement("circle", Color.blue, 1d, null, 0d, 1d, 7d), astarPath));
+            }}, new ArrayList());
         }
       }
 
@@ -111,8 +150,8 @@ public class BenchmarkSuite <V extends SPVertex> {
         System.out.printf("       ms: %s\n", ms);
       } else if (type == Output.CSV) {
         System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t\n", name,
-            args.getItem4(), args.getItem1().getVertexCount(),
-            args.getItem1().getEdgeCount(), relaxed, ms, ns);
+            args.getItem4(), G.getVertexCount(),
+            G.getEdgeCount(), relaxed, ms, ns);
       }
   }
 

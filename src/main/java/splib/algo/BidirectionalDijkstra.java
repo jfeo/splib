@@ -7,6 +7,7 @@ import splib.data.Graph;
 import splib.data.Vertex;
 import splib.data.BDDVertex;;
 import splib.util.Heap;
+import splib.util.Heap.Index;
 import splib.util.Pair;
 
 
@@ -31,13 +32,14 @@ public class BidirectionalDijkstra {
     Heap<Integer> Qt = new Heap<Integer>((i, j) ->
         G.getVertex(i).getSuccessorEstimate().compareTo(G.getVertex(j).getSuccessorEstimate()),
         heapArity);
+    ArrayList<Index> indices = new ArrayList<Index>();
     ArrayList<Integer> Ss = new ArrayList<Integer>();
     ArrayList<Integer> St = new ArrayList<Integer>();
 
     G.getVertex(s).setSourceStatus(BDDVertex.Status.Queued);
-    Qs.insert(s);
+    G.getVertex(s).setSourceIndex(Qs.insert(s));
     G.getVertex(t).setTargetStatus(BDDVertex.Status.Queued);
-    Qt.insert(t);
+    G.getVertex(t).setTargetIndex(Qt.insert(t));
 
     // Continue, while the minimum elements of the two queues, are not identical
     while (!Qs.isEmpty() || !Qt.isEmpty()) {
@@ -73,16 +75,16 @@ public class BidirectionalDijkstra {
     double bestPath = 1d/0d;
     V bestV = null;
 
-    for (Integer i : Qs.getElements()) {
-      V v = G.getVertex(i);
+    for (Pair<Integer, ?> qElem : Qs.getElements()) {
+      V v = G.getVertex(qElem.getItem1());
       if (v.getEstimate() + v.getSuccessorEstimate() <= bestPath) {
         bestPath = v.getEstimate() + v.getSuccessorEstimate();
         bestV = (V)v;
       }
     }
 
-    for (Integer i : Qt.getElements()) {
-      V v = G.getVertex(i);
+    for (Pair<Integer, ?> qElem : Qt.getElements()) {
+      V v = G.getVertex(qElem.getItem1());
       if (v.getEstimate() + v.getSuccessorEstimate() <= bestPath) {
         bestPath = v.getEstimate() + v.getSuccessorEstimate();
         bestV = (V)v;
@@ -125,10 +127,10 @@ public class BidirectionalDijkstra {
       v.setSuccessor(i);
       v.setSuccessorEstimate(newEstimate);
       if (v.getTargetStatus() == BDDVertex.Status.Queued) {
-        Q.changeKey(j);
+        Q.changeKey(v.getTargetIndex().getValue());
       } else {
         v.setTargetStatus(BDDVertex.Status.Queued);
-        Q.insert(j);
+        v.setTargetIndex(Q.insert(j));
       }
     }
   }
@@ -142,10 +144,10 @@ public class BidirectionalDijkstra {
       v.setPredecessor(i);
       v.setEstimate(newEstimate);
       if (v.getSourceStatus() == BDDVertex.Status.Queued) {
-        Q.changeKey(j);
+        Q.changeKey(v.getSourceIndex().getValue());
       } else {
         v.setSourceStatus(BDDVertex.Status.Queued);
-        Q.insert(j);
+        v.setSourceIndex(Q.insert(j));
       }
     }
   }

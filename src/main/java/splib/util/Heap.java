@@ -2,7 +2,6 @@ package splib.util;
 
 import splib.util.Pair;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Comparator;
 import java.lang.Math;
 import java.lang.RuntimeException;
@@ -10,9 +9,25 @@ import java.lang.RuntimeException;
 
 public class Heap<E> {
 
+  public static class Index {
+    private Integer value = null;
 
-  protected HashMap<E, Integer> indexMap;
-  protected ArrayList<E> elements;
+    public Index(Integer value) {
+      this.value = value;
+    }
+
+    public Integer getValue() {
+      return this.value;
+    }
+
+    public void setValue(Integer i) {
+      this.value = i;
+    }
+
+  }
+
+
+  protected ArrayList<Pair<E, Index>> elements;
   protected Comparator<E> comparator;
   protected int arity;
 
@@ -24,8 +39,7 @@ public class Heap<E> {
 
     this.arity = arity;
     this.comparator = c;
-    this.elements = new ArrayList<E>();
-    this.indexMap = new HashMap<E, Integer>();
+    this.elements = new ArrayList<Pair<E, Index>>();
   }
 
 
@@ -36,10 +50,9 @@ public class Heap<E> {
 
     this.arity = arity;
     this.comparator = c;
-    this.elements = new ArrayList<E>(elements);
-    this.indexMap = new HashMap<E, Integer>();
+    this.elements = new ArrayList<Pair<E, Index>>();
     for (int i = 0; i < elements.size(); i++) {
-      this.indexMap.put(this.elements.get(i), i);
+      this.elements.add(new Pair(elements.get(i), new Index(i)));
     }
     for (int i = (int)Math.floor((double)(elements.size() - 1) / 2.0); i >= 0;
         i--) {
@@ -52,12 +65,12 @@ public class Heap<E> {
     if (i == j) {
       return;
     }
-    E tmp = this.elements.get(i);
+    Pair<E, Index> tmp = this.elements.get(i);
     this.elements.set(i, this.elements.get(j));
     this.elements.set(j, tmp);
 
-    this.indexMap.put(this.elements.get(i), i);
-    this.indexMap.put(this.elements.get(j), j);
+    this.elements.get(i).getItem2().setValue(i);
+    this.elements.get(j).getItem2().setValue(j);
   }
 
 
@@ -67,7 +80,7 @@ public class Heap<E> {
    */
   public E top() {
     if (this.elements.size() > 0) {
-      return this.elements.get(0);
+      return this.elements.get(0).getItem1();
     } else {
       return null;
     }
@@ -79,10 +92,11 @@ public class Heap<E> {
    * @param element The element to be inserted.
    * @param key The key value for the element.
    */
-  public void insert(E element) {
-    this.elements.add(element);
-    this.indexMap.put(element, this.elements.size() - 1);
-    this.changeKey(element);
+  public Index insert(E element) {
+    Index idx = new Index(elements.size());
+    this.elements.add(new Pair(element, idx));
+    this.changeKey(this.elements.size() - 1);
+    return idx;
   }
 
   /**
@@ -92,9 +106,9 @@ public class Heap<E> {
   public E extract() {
     if (this.elements.size() > 0) {
       E top = this.top();
-      this.indexMap.remove(top);
+      this.elements.get(0).getItem2().setValue(null);
       this.elements.set(0, this.elements.get(this.elements.size() - 1));
-      this.indexMap.put(this.elements.get(0), 0);
+      this.elements.get(0).getItem2().setValue(0);
       this.elements.remove(this.elements.size() - 1);
       this.heapify(0);
       return top;
@@ -119,28 +133,14 @@ public class Heap<E> {
    * @return The element at the ith index of the queue.
    */
   public E get(int i) {
-    return this.elements.get(i);
+    return this.elements.get(i).getItem1();
   }
 
 
-  /**
-   * Get the index of the first occurence of the given element.
-   * @param element The element to find the index of.
-   * @return The index of the element, or -1 if no such element exists.
-   */
-  public Integer indexOf(E element) {
-    return this.indexMap.get(element);
-  }
-
-
-  public ArrayList<E> getElements() {
+  public ArrayList<Pair<E, Index>> getElements() {
     return this.elements;
   }
 
-
-  public HashMap<E, Integer> getIndexMap() {
-    return this.indexMap;
-  }
 
 
   /**
@@ -159,8 +159,8 @@ public class Heap<E> {
       for (int j = 0; j < arity; j++) {
         int c = children[j];
         if (c < this.elements.size()
-            &&  this.comparator.compare(this.elements.get(c),
-            this.elements.get(top)) < 0) {
+            &&  this.comparator.compare(this.elements.get(c).getItem1(),
+            this.elements.get(top).getItem1()) < 0) {
           top = c;
         }
       }
@@ -201,15 +201,11 @@ public class Heap<E> {
    * @param key The new key value
    */
   public void changeKey(int i) {
-    while (i != 0 && this.comparator.compare(this.elements.get(i),
-        this.elements.get(this.parent(i))) < 0) {
+    while (i != 0 && this.comparator.compare(this.elements.get(i).getItem1(),
+        this.elements.get(this.parent(i)).getItem1()) < 0) {
       this.swap(i, this.parent(i));
       i = this.parent(i);
     }
-  }
-
-  public void changeKey(E elem) {
-    this.changeKey(this.indexMap.get(elem));
   }
 
 }

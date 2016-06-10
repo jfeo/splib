@@ -1,7 +1,7 @@
 package splib.data;
 
 
-import splib.data.Vertex;
+import splib.util.Heap.Index;
 import splib.data.SPVertex;
 import splib.data.Vertex;
 
@@ -18,6 +18,8 @@ public class BDDVertex extends SPVertex {
   protected Double succEstimate;
   protected Status sstatus;
   protected Status tstatus;
+  protected Index sIndex;
+  protected Index tIndex;
 
   public BDDVertex() {
     super();
@@ -25,6 +27,8 @@ public class BDDVertex extends SPVertex {
     this.succ = null;
     this.sstatus = Status.NotQueued;
     this.tstatus = Status.NotQueued;
+    this.sIndex = null;
+    this.tIndex = null;
   }
 
   public BDDVertex(Double succEstimate, Double estimate, Integer succ, Integer pred) {
@@ -33,6 +37,22 @@ public class BDDVertex extends SPVertex {
     this.succEstimate = succEstimate;
     this.sstatus = Status.NotQueued;
     this.tstatus = Status.NotQueued;
+  }
+
+  public void setSourceIndex(Index sIndex) {
+    this.sIndex = sIndex;
+  }
+
+  public void setTargetIndex(Index tIndex) {
+    this.tIndex = tIndex;
+  }
+
+  public Index getSourceIndex() {
+    return this.sIndex;
+  }
+
+  public Index getTargetIndex() {
+    return this.tIndex;
   }
 
   public void setSuccessor(Integer succ) {
