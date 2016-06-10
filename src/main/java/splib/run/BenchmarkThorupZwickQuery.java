@@ -19,7 +19,7 @@ public class BenchmarkThorupZwickQuery {
   public static void main(String[] arg) throws InstantiationException, IllegalAccessException {
     BenchmarkSuite<TZSPVertex> b = new BenchmarkSuite<TZSPVertex>(TZSPVertex.class);
 
-    for (int i = 500; i < 5000; i += 500) {
+    for (int i = 5000; i > 0; i += 250) {
       for (int d = 3; d < 15; d += 3) {
         Pair<Graph<TZSPVertex>, ?> G = GraphCreator.<TZSPVertex>euclidian(TZSPVertex.class, 100d, i, 4);
         for (int k = 3; k < 10; k++) {

@@ -27,7 +27,7 @@ public class BenchmarkBidirectionalDijkstra {
         for (int a = 2; a <= maxArity; a++) {
           b.runSinglePairBenchmark(BenchmarkSuite.Output.CSV,
             "Bidirectional Dijkstra, " + a + "-ary Heap", BidirectionalDijkstra::singlePair,
-            new Quad(G, G.getVertices().get(0), G.getVertices().get(1) , a));
+            new Quad(G, 0, 1 , a));
         }
       }
     }
