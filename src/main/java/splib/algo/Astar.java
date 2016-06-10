@@ -21,10 +21,11 @@ public class Astar {
   }
 
 
-  /** The A* single-pair shortest path algorithm.  @param <H> The heap type
-   * used for priority queue.  @param G The graph to perform the single source
-   * shortest path search on.  @param s The source vertex. Undefined behaviour,
-   * if this vertex is not in G.  @return The vertices.
+  /** The A* single-pair shortest path algorithm.
+   * @param <H> The heap type used for priority queue.
+   * @param G The graph to perform the single source shortest path search on.
+   * @param s The source vertex. Undefined behaviour, if this vertex is not in G.
+   * @return The vertices.
    */
   public static <V extends EuclidianSPVertex> double singlePair(Graph<V> G,
       Integer s, Integer t, Heuristic h, int heapArity) {
@@ -48,11 +49,7 @@ public class Astar {
     open.insert(s);
 
     // Relax edges adjacent to the minimum estimate distance vertex
-    while (true) {
-      boolean stuff1 = open.top() != t;
-      boolean stuff2 = !open.isEmpty();
-      if (!(stuff1 && stuff2))
-        break;
+    while (!open.isEmpty() && open.top() != t) {
       int j = open.extract();
       G.getVertex(j).Close();
 
@@ -62,7 +59,7 @@ public class Astar {
         if (edge.getItem1() == G.getVertex(j).getPredecessor()) {
           continue;
         }
-        Astar.relax(G, h, open, j, edge.getItem1(), edge.getItem2());
+        Astar.relax(G, h, open, j, edge.getItem1(), t, edge.getItem2());
         if (edge.getItem1() == t) {
           break;
         }
@@ -98,16 +95,18 @@ public class Astar {
    * @param weight The weight of the edge between the first and the second vertex.
    */
   public static <V extends EuclidianSPVertex> void relax(Graph<V> G, Heuristic h, Heap<Integer> open,
-      int i, int j, double weight) {
+      int i, int j, int t, double weight) {
     V u = G.getVertex(i);
     V v = G.getVertex(j);
 
     double newEstimate = u.getEstimate() + weight;
-    if (v.isOpen() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))    {
-      // skip
-    } else if (v.isClosed() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v)) {
-      // skip
-    } else {
+    if (!(v.isOpen() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))
+        && !(v.isClosed() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))) {
+    // if (v.isOpen() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))    {
+    //   // skip
+    // } else if (v.isClosed() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v)) {
+    //   // skip
+    // } else {
       v.setPredecessor(i);
       v.setEstimate(newEstimate);
       v.Open();
