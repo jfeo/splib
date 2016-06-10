@@ -14,7 +14,7 @@ public class BDDVertex extends SPVertex {
     HasBeenQueued
   }
 
-  protected BDDVertex succ;
+  protected Integer succ;
   protected Double succEstimate;
   protected Status sstatus;
   protected Status tstatus;
@@ -27,7 +27,7 @@ public class BDDVertex extends SPVertex {
     this.tstatus = Status.NotQueued;
   }
 
-  public BDDVertex(Double succEstimate, Double estimate, BDDVertex succ, BDDVertex pred) {
+  public BDDVertex(Double succEstimate, Double estimate, Integer succ, Integer pred) {
     super(pred, estimate);
     this.succ = succ;
     this.succEstimate = succEstimate;
@@ -35,11 +35,11 @@ public class BDDVertex extends SPVertex {
     this.tstatus = Status.NotQueued;
   }
 
-  public void setSuccessor(BDDVertex succ) {
+  public void setSuccessor(Integer succ) {
     this.succ = succ;
   }
 
-  public BDDVertex getSuccessor() {
+  public Integer getSuccessor() {
     return this.succ;
   }
 

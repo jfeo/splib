@@ -7,10 +7,10 @@ import java.lang.Comparable;
 
 public class SPVertex extends Vertex {
 
-  protected SPVertex pred;
+  protected Integer pred;
   protected Double estimate;
 
-  public SPVertex(SPVertex pred, double estimate) {
+  public SPVertex(Integer pred, double estimate) {
     super();
     this.pred = pred;
     this.estimate = estimate;
@@ -22,11 +22,11 @@ public class SPVertex extends Vertex {
     this.estimate = 1.0d / 0.0d; // Infinity
   }
 
-  public SPVertex getPredecessor() {
+  public Integer getPredecessor() {
     return this.pred;
   }
 
-  public void setPredecessor(SPVertex v) {
+  public void setPredecessor(Integer v) {
     this.pred = v;
   }
 
@@ -38,8 +38,8 @@ public class SPVertex extends Vertex {
     this.estimate = e;
   }
 
-  public boolean isAdjacent(SPVertex v) {
-    return super.isAdjacent((Vertex)v);
-  }
+  // public boolean isAdjacent(SPVertex v) {
+  //   return super.isAdjacent((Vertex)v);
+  // }
 
 }

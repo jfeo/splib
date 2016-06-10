@@ -34,16 +34,16 @@ public class BenchmarkThorupZwickPreprocess {
     int maxArity = 10;
     int maxK = 128;
 
-    for (int i = 150; i <= 5000; i += 150) {
-      for (int d = 2; d < i / 3; d *= 3) {
+    for (int i = 500; i <= 5000; i += 500) {
+      for (int d = 2; d < i / 3; d *= 6) {
         Pair<Graph<TZSPVertex>, ?> G1 = GraphCreator.<TZSPVertex>euclidian(TZSPVertex.class, 100d, i, d);
-        for (int a = 2; a <= maxArity; a++) {
+        // for (int a = 2; a <= maxArity; a++) {
           for (int k = 2; k <= maxK; k *= 2) {
             b.runOraclePreprocessBenchmark(BenchmarkSuite.Output.CSV,
                 "Thorup Zwick Distance Oracle", ThorupZwick.class,
-                new Triple(G1.getItem1(), k, a));
+                new Triple(G1.getItem1(), k, 4));
           }
-        }
+        // }
       }
     }
   }

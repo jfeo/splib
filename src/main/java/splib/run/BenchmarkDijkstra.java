@@ -22,7 +22,7 @@ public class BenchmarkDijkstra {
     for (int i = 0; i < 10000; i++) {
       Graph<SPVertex> G = GraphCreator.complete(SPVertex.class, 50);
       b.addSingleSourceBenchmark("", Dijkstra::singleSource, G,
-          G.getVertices().get(10), 3);
+          10, 3);
     }
     b.run(BenchmarkSuite.Output.NONE);
     b = null;

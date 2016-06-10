@@ -24,22 +24,23 @@ public class Dijkstra {
    * @param s The source vertex. Undefined behaviour, if this vertex is not in G.
    * @return The vertices.
    */
-  public static <V extends SPVertex> ArrayList<V> singleSource(Graph<V> G,
-      V s, int heapArity)  {
+  public static <V extends SPVertex> ArrayList<Integer> singleSource(Graph<V> G,
+      int s, int heapArity)  {
     Dijkstra.initializeSingleSource(G, s);
 
-    ArrayList<V> S = new ArrayList<V>();
-    Heap<SPVertex> Q = new Heap<SPVertex>((v, u) ->
-        v.getEstimate().compareTo(u.getEstimate()), heapArity);
+    ArrayList<Integer> S = new ArrayList<Integer>();
+    Heap<Integer> Q = new Heap<Integer>((v, u) ->
+        G.getVertex(v).getEstimate().compareTo(G.getVertex(u).getEstimate()),
+        heapArity);
 
     Q.insert(s);
 
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!Q.isEmpty()) {
-      V u = (V)Q.extract();
+      int u = Q.extract();
       S.add(u);
-      for (Pair<Vertex, Double> v : u.getAdjacency()) {
-        Dijkstra.relax(Q, u, (V)v.getItem1(), v.getItem2());
+      for (Pair<Integer, Double> edge : G.getAdjacency(u)) {
+        Dijkstra.relax(G, Q, u, edge.getItem1(), edge.getItem2());
       }
     }
 
@@ -55,12 +56,12 @@ public class Dijkstra {
    * @param s The source vertex.
    */
   public static <V extends SPVertex> void initializeSingleSource(Graph<V> G,
-      V s) {
+      int s) {
     for (V v : G.getVertices()) {
       v.setEstimate(1.0f / 0.0f); // Infinity
       v.setPredecessor(null);
     }
-    s.setEstimate(0);
+    G.getVertex(s).setEstimate(0);
   }
 
 
@@ -71,12 +72,14 @@ public class Dijkstra {
    * @param v The second vertex.
    * @param weight The weight of the edge between the first and the second vertex.
    */
-  public static <V extends SPVertex> void relax(Heap Q, V u, V v, double weight) {
+  public static <V extends SPVertex> void relax(Graph<V> G, Heap Q, int i, int j, double weight) {
+    V u = G.getVertex(i);
+    V v = G.getVertex(j);
     double newEstimate = u.getEstimate() + weight;
     if (v.getEstimate() > newEstimate) {
-      v.setPredecessor(u);
+      v.setPredecessor(i);
       v.setEstimate(newEstimate);
-      Q.insert(v);
+      Q.insert(j);
     }
   }
 }

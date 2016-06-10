@@ -22,7 +22,7 @@ public class EuclidianSPVertex extends SPVertex {
     this.status = Status.Neither;
   }
 
-  public EuclidianSPVertex(EuclidianSPVertex pred, double estimate, double x, double y) {
+  public EuclidianSPVertex(Integer pred, double estimate, double x, double y) {
     super(pred, estimate);
     this.position = new Pair(x, y);
     this.status = Status.Neither;

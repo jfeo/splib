@@ -8,7 +8,6 @@ import java.awt.Color;
 import java.io.PrintWriter;
 
 import splib.data.Vertex;
-import splib.data.SPVertex;
 import splib.data.Graph;
 import splib.util.Pair;
 import splib.util.Triple;
@@ -94,13 +93,13 @@ public class GraphDrawer {
   }
 
 
-  public static <V extends SPVertex> void graphSVG(double scale, String path,
-      Graph<V> G, List<Pair<Double, Double>> positions,
-      SVGElement vertexElement, List<Pair<SVGElement, List<V>>> vertexMarkLists,
-      List<Triple<SVGPath, V, List<V>>> vertexPathLists) {
+  public static void graphSVG(double scale, String path, Graph<?> G,
+      List<Pair<Double, Double>> positions, SVGElement vertexElement,
+      List<Pair<SVGElement, List<Integer>>> vertexMarkLists,
+      List<Triple<SVGPath, Integer, List<Integer>>> vertexPathLists) {
 
     double ratio = 1000d / scale;
-    HashSet<SPVertex> vertexEdgesDrawn = new HashSet<SPVertex>();
+    HashSet<Integer> vertexEdgesDrawn = new HashSet<Integer>();
 
     try {
       PrintWriter writer = new PrintWriter(path, "UTF-8");
@@ -109,12 +108,11 @@ public class GraphDrawer {
       writer.println("xmlns=\"http://www.w3.org/2000/svg\"");
       writer.println("width=\"1000px\" height=\"1000px\" version=\"1.1\">");
 
-      for (int i = 0; i < G.getVertices().size(); i++) {
-        V v = G.getVertices().get(i);
-        vertexEdgesDrawn.add(v);
-        for (Pair<Vertex, Double> adj : v.getAdjacency()) {
+      for (int i = 0; i < G.getVertexCount(); i++) {
+        vertexEdgesDrawn.add(i);
+        for (Pair<Integer, Double> adj : G.getAdjacency(i)) {
           if (!vertexEdgesDrawn.contains(adj.getItem1())) {
-            int j = G.getVertices().indexOf((V)adj.getItem1());
+            int j = adj.getItem1();
             writer.println(String.format("<path d=\"M %1$.3f %2$.3f L %3$.3f %4$.3f\" stroke=\"black\" stroke-width=\"0.1\" fill=\"none\" />",
                   positions.get(j).getItem1() * ratio,
                   positions.get(j).getItem2() * ratio,
@@ -126,24 +124,22 @@ public class GraphDrawer {
                                             positions.get(i).getItem2() * ratio));
       }
 
-      for (Pair<SVGElement, List<V>> marks : vertexMarkLists) {
-        for (V v : marks.getItem2()) {
+      for (Pair<SVGElement, List<Integer>> marks : vertexMarkLists) {
+        for (Integer v : marks.getItem2()) {
           if (v == null)
             continue;
-          int i = G.getVertices().indexOf(v);
-          Pair<Double, Double> position = positions.get(i);
+          Pair<Double, Double> position = positions.get(v);
           writer.println(marks.getItem1().getSVG(position.getItem1() * ratio,
                                                  position.getItem2() * ratio));
         }
       }
 
-      for (Triple<SVGPath, V, List<V>> vertexPaths : vertexPathLists) {
+      for (Triple<SVGPath, Integer, List<Integer>> vertexPaths : vertexPathLists) {
         if (vertexPaths.getItem2() == null)
           continue;
-        int i = G.getVertices().indexOf(vertexPaths.getItem2());
+        int i = vertexPaths.getItem2();
         Pair<Double, Double> start = positions.get(i);
-        for (V v : vertexPaths.getItem3()) {
-          int j = G.getVertices().indexOf(v);
+        for (Integer j : vertexPaths.getItem3()) {
           Pair<Double, Double> end = positions.get(j);
           writer.println(vertexPaths.getItem1().getSVG(start.getItem1() * ratio, start.getItem2() * ratio,
                 end.getItem1() * ratio, end.getItem2() * ratio));

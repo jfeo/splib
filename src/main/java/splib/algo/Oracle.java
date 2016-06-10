@@ -7,7 +7,7 @@ import splib.data.SPVertex;
 
 public interface Oracle <V extends SPVertex> {
 
-  Double query(V v, V u);
+  Double query(int v, int u);
   Object preprocess(Graph<V> G, int heapArity);
   int getK();
 

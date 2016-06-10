@@ -29,17 +29,17 @@ public class BenchmarkSuite <V extends SPVertex> {
 
   @FunctionalInterface
   public interface SingleSourceAlgorithm<W extends SPVertex> {
-    public ArrayList<W> sssp(Graph<W> G, W s, int heapArity);
+    public ArrayList<Integer> sssp(Graph<W> G, int s, int heapArity);
   }
 
   @FunctionalInterface
   public interface SinglePairAlgorithm<W extends SPVertex> {
-    public Object spsp(Graph<W> G, W s, W t, int heapArity);
+    public Object spsp(Graph<W> G, int s, int t, int heapArity);
   }
 
-  private ArrayList<Triple<String, SingleSourceAlgorithm, Triple<Graph<V>, V,
+  private ArrayList<Triple<String, SingleSourceAlgorithm, Triple<Graph<V>, Integer,
           Integer>>> singleSourceBenchmarks;
-  private ArrayList<Triple<String, SinglePairAlgorithm, Quad<Graph<V>, V, V,
+  private ArrayList<Triple<String, SinglePairAlgorithm, Quad<Graph<V>, Integer, Integer,
           Integer>>> singlePairBenchmarks;
   private ArrayList<Quint<String, Class<?>, Graph<V>, Integer, Integer>>
     oraclePreprocessBenchmarks;
@@ -50,35 +50,37 @@ public class BenchmarkSuite <V extends SPVertex> {
   public BenchmarkSuite(Class<V> vClass) {
     this.vClass = vClass;
     this.singleSourceBenchmarks = new ArrayList<Triple<String,
-      SingleSourceAlgorithm, Triple<Graph<V>, V, Integer>>>();
+      SingleSourceAlgorithm, Triple<Graph<V>, Integer, Integer>>>();
     this.singlePairBenchmarks = new ArrayList<Triple<String,
-      SinglePairAlgorithm, Quad<Graph<V>, V, V,Integer>>>();
+      SinglePairAlgorithm, Quad<Graph<V>, Integer, Integer, Integer>>>();
     this.oraclePreprocessBenchmarks = new ArrayList<Quint<String, Class<?>, Graph<V>,
       Integer, Integer>>();
     this.oracleQueryBenchmarks = new ArrayList<Triple<String, Oracle, Graph<V>>>();
   }
 
-  public void addSingleSourceBenchmark(String name, SingleSourceAlgorithm<V> algo,
-      Graph<V> G, V s, int heapArity) {
-    this.singleSourceBenchmarks.add(new Triple(name, algo, new Triple(G, s, heapArity)));
+  public void addSingleSourceBenchmark(String name, SingleSourceAlgorithm<V>
+      algo, Graph<V> G, int s, int heapArity) {
+    this.singleSourceBenchmarks.add(new Triple(name, algo, new Triple(G, s,
+            heapArity)));
   }
 
   public void addSinglePairBenchmark(String name, SinglePairAlgorithm<V> algo,
-      Graph<V> G, V s, V t, int heapArity) {
+      Graph<V> G, int s, int t, int heapArity) {
     this.singlePairBenchmarks.add(new Triple(name, algo,
           new Quad(G, s, t, heapArity)));
   }
 
-  public <O extends Oracle> void addOraclePreprocessBenchmark(String name, Class<O> oClass, Graph<V> G, int k, int heapArity) {
-    this.oraclePreprocessBenchmarks.add(new Quint(name, oClass, G, k, heapArity));
-  }
+  public <O extends Oracle> void addOraclePreprocessBenchmark(String name,
+      Class<O> oClass, Graph<V> G, int k, int heapArity) {
+    this.oraclePreprocessBenchmarks.add(new Quint(name, oClass, G, k,
+          heapArity)); }
 
   public void addOracleQueryBenchmark(String name, Oracle o, Graph<V> G) {
     this.oracleQueryBenchmarks.add(new Triple(name, o, G));
   }
 
   public void runSinglePairBenchmark(Output type, String name,
-        SinglePairAlgorithm<V> algo, Quad<Graph<V>, V, V, Integer> args) {
+        SinglePairAlgorithm<V> algo, Quad<Graph<V>, Integer, Integer, Integer> args) {
       long ns = System.nanoTime();
       long ms = System.currentTimeMillis();
       algo.<V>spsp(args.getItem1(), args.getItem2(), args.getItem3(), args.getItem4());
@@ -115,7 +117,7 @@ public class BenchmarkSuite <V extends SPVertex> {
   }
 
   public void runSingleSourceBenchmark(Output type, String name,
-      SingleSourceAlgorithm<V> algo, Triple<Graph<V>, V, Integer> args) {
+      SingleSourceAlgorithm<V> algo, Triple<Graph<V>, Integer, Integer> args) {
     long ns = System.nanoTime();
     long ms = System.currentTimeMillis();
     algo.<V>sssp(args.getItem1(), args.getItem2(), args.getItem3());
@@ -189,13 +191,11 @@ public class BenchmarkSuite <V extends SPVertex> {
 
     // Query all pairs of vertices
     for (int i = 0; i < G.getVertexCount(); i++) {
-      V s = G.getVertices().get(i);
-      Dijkstra.<V>singleSource(G, s, 4);
+      Dijkstra.<V>singleSource(G, i, 4);
       for (int j = i + 1; j < G.getVertexCount(); j++) {
-        V t = G.getVertices().get(j);
         avgNs -= System.nanoTime();
         avgMs -= System.currentTimeMillis();
-        double oracleDistance = o.query(s, t);
+        double oracleDistance = o.query(i, j);
         avgNs += System.nanoTime();
         avgMs += System.currentTimeMillis();
 
@@ -203,7 +203,7 @@ public class BenchmarkSuite <V extends SPVertex> {
         if (oracleDistance == 1d/0d) {
           connectedPairs--;
         } else {
-          double actualDistance = t.getEstimate();
+          double actualDistance = G.getVertex(j).getEstimate();
           double stretch = oracleDistance / actualDistance;
           if (stretch < minStretch)
             minStretch = stretch;
@@ -242,14 +242,14 @@ public class BenchmarkSuite <V extends SPVertex> {
     }
 
     // Single sources
-    for (Triple<String, SingleSourceAlgorithm, Triple<Graph<V>, V,Integer>> bm :
+    for (Triple<String, SingleSourceAlgorithm, Triple<Graph<V>, Integer, Integer>> bm :
         singleSourceBenchmarks) {
       this.runSingleSourceBenchmark(type, bm.getItem1(), bm.getItem2(),
           bm.getItem3());
     }
 
     // Single pairs
-    for (Triple<String, SinglePairAlgorithm, Quad<Graph<V>, V, V,
+    for (Triple<String, SinglePairAlgorithm, Quad<Graph<V>, Integer, Integer,
                Integer>> bm : singlePairBenchmarks) {
       this.runSinglePairBenchmark(type, bm.getItem1(), bm.getItem2(),
           bm.getItem3());
