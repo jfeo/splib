@@ -49,8 +49,8 @@ public class TestAstar {
 
   }
 
-  public void dumpSVG() {
-    GraphDrawer.<EuclidianSPVertex>graphSVG(100, "astar"+i+"_"+d+".svg", G, euclidian.getItem2(),
+  public void dumpSVG(Graph<EuclidianSPVertex> G, ArrayList<Pair<Double, Double>> positions, ArrayList<Integer> astarPath, ArrayList<Integer> dijkstraPath, ArrayList<Integer> astarRelax, int i, int d, int t, int s) {
+    GraphDrawer.<EuclidianSPVertex>graphSVG(100, "astar"+i+"_"+d+".svg", G, positions,
       new GraphDrawer.SVGElement("circle", null, 0d, Color.black, 1d, 1d, 2d),
       new ArrayList<Pair<GraphDrawer.SVGElement, List<Integer>>>(){{
         add(new Pair(new GraphDrawer.SVGElement("circle", null, 0d, Color.white, 1d, 1d, 1d), astarRelax));
