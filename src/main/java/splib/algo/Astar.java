@@ -46,7 +46,7 @@ public class Astar {
     }, heapArity);
 
     G.getVertex(s).Open();
-    open.insert(s);
+    G.getVertex(s).i = open.insert(s);
 
     // Relax edges adjacent to the minimum estimate distance vertex
     while (!open.isEmpty() && open.top() != t) {
@@ -100,17 +100,18 @@ public class Astar {
     V v = G.getVertex(j);
 
     double newEstimate = u.getEstimate() + weight;
-    if (!(v.isOpen() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))
-        && !(v.isClosed() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))) {
-    // if (v.isOpen() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))    {
-    //   // skip
-    // } else if (v.isClosed() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v)) {
-    //   // skip
-    // } else {
+    // if (!(v.isOpen() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))
+    //     && !(v.isClosed() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v))) {
+    if (v.isOpen() && v.getEstimate() + h.heuristic(v) <= newEstimate + h.heuristic(v))    {
+      // skip
+      open.changeKey(v.i.getValue());
+    } else if (v.isClosed() && v.getEstimate() + h.heuristic(v) < newEstimate + h.heuristic(v)) {
+      // skip
+    } else {
       v.setPredecessor(i);
       v.setEstimate(newEstimate);
       v.Open();
-      open.insert(j);
+      v.i = open.insert(j);
     }
   }
 

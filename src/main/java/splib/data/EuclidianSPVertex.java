@@ -1,5 +1,6 @@
 package splib.data;
 
+import splib.util.Heap.Index;
 import splib.util.Pair;
 import splib.data.Vertex;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ public class EuclidianSPVertex extends SPVertex {
 
   protected Pair<Double, Double> position;
   protected Status status;
+  public Index i;
 
   public EuclidianSPVertex(double x, double y) {
     super();
