@@ -17,6 +17,7 @@ import java.awt.Color;
 
 import java.lang.Math;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -27,6 +28,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import java.util.Random;
 import java.lang.RuntimeException;
+import java.util.Scanner;
 
 import java.io.IOException;
 import org.xml.sax.SAXException;
@@ -37,59 +39,152 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class GraphCreator {
 
-public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V>
-    vClass, Graph<U> graph, ArrayList<Pair<Double, Double>> positions)  throws
-  InstantiationException, IllegalAccessException {
+  public static <V extends SPVertex> Pair<Graph<V>, ArrayList<Pair<Double, Double>>> DIMACS(String grFileName, String coFileName, Class<V> vClass, double scale)
+  throws FileNotFoundException, InstantiationException, IllegalAccessException
+  {
+    Graph<V> G = new Graph<V>();
 
-  Graph<V> G = new Graph<V>();
+    File grFile = new File(grFileName);
+    File coFile = new File(coFileName);
 
-  for (int i = 0; i < graph.getVertexCount(); i++) {
-    G.addVertex(vClass.newInstance());
-  }
-
-  for (int i = 0; i < graph.getVertexCount(); i++) {
-    for (Pair<Integer, Double> e : graph.getAdjacency(i)) {
-      boolean existsInG = false;
-      for (Pair<Integer, ?> f : G.getAdjacency(e.getItem1())) {
-        existsInG = existsInG || f.getItem1().equals(i);
-      }
-      if (!existsInG) {
-        G.addEdge(i, e.getItem1(), e.getItem2());
+    // Get positions from file
+    Scanner scan = new Scanner(coFile);
+    ArrayList<Pair<Double, Double>> positions = new ArrayList<Pair<Double, Double>>();
+    while(scan.hasNextLine()){
+      String line = scan.nextLine();
+      String[] data = line.split(" ");
+      if (line.startsWith("v")) {
+        positions.add(new Pair(Double.parseDouble(data[2]), Double.parseDouble(data[3])));
       }
     }
 
+    scan = new Scanner(grFile);
+    while (scan.hasNextLine()) {
+      String line = scan.nextLine();
+      String[] data = line.split(" ");
+      if (line.startsWith("a")) {
+        int v1 = Integer.parseInt(data[1]) - 1;
+        int v2 = Integer.parseInt(data[2]) - 1;
 
-    // for (Pair<Integer, Double> edge : graph.getAdjacency(i)) {
-    //   boolean exists = false;
-    //   int j = edge.getItem1();
-    //   for (Pair<Integer, ?> edge2 : G.getAdjacency(j)) {
-    //     if (edge2.getItem1() == i) {
-    //       exists = true;
-    //     }
-    //   }
-    //   if (!exists) {
-    //     G.addEdge(i, j, edge.getItem2());
-    //   }
-    // }
-  }
-
-  if (EuclidianSPVertex.class.isAssignableFrom(vClass))  {
-    for (int i = 0; i < G.getVertexCount(); i++) {
-      Pair<Double, Double> position = positions.get(i);
-      ((EuclidianSPVertex)G.getVertex(i)).setPosition(position.getItem1(), position.getItem2());
+        //double w = Double.parseDouble(data[3]);
+        double w = Math.sqrt(Math.pow(positions.get(v1).getItem1()
+                                    - positions.get(v2).getItem1(), 2)
+                           + Math.pow(positions.get(v1).getItem2()
+                                    - positions.get(v2).getItem2(), 2));
+        G.addEdge(v1, v2, w);
+      } else if (line.startsWith("p")) {
+        int vertexCount = Integer.parseInt(data[2]);
+        System.out.println("Reading properties. Vertices: " + data[2] + " and edges: " + data[3]);
+        for (int i = 0; i < vertexCount; i++) {
+          G.addVertex(vClass.newInstance());
+        }
+      }
     }
+
+    // Normalize positions with scale
+    double minX = 1d/0d;
+    double maxX = -1d/0d;
+    double minY = 1d/0d;
+    double maxY = -1d/0d;
+    for (int i = 0; i < positions.size(); i++) {
+      Pair<Double, Double> pos = positions.get(i);
+      minX = Math.min(minX, pos.getItem1());
+      maxX = Math.max(maxX, pos.getItem1());
+      minY = Math.min(minY, pos.getItem2());
+      maxY = Math.max(maxY, pos.getItem2());
+
+      if (EuclidianSPVertex.class.isAssignableFrom(vClass))  {
+        Pair<Double, Double> position = pos;
+        ((EuclidianSPVertex)G.getVertex(i)).setPosition(position.getItem1(), position.getItem2());
+      }
+    }
+    ArrayList<Pair<Double, Double>> normPositions = new ArrayList<Pair<Double, Double>>();
+    for (int i = 0; i < positions.size(); i++) {
+      double x = positions.get(i).getItem1();
+      double y = positions.get(i).getItem2();
+      double _maxX = maxX;
+      double _maxY = maxY;
+      if (minX < 0) {
+        x += Math.abs(minX);
+        _maxX += Math.abs(minX);
+      } else {
+        x -= minX;
+        _maxX -= minX;
+      }
+      if (minY < 0) {
+        y += Math.abs(minY);
+        _maxY += Math.abs(minY);
+      } else {
+        y += minY;
+        _maxY += minY;
+      }
+
+      // flip y
+      // y = _maxY - y;
+
+      normPositions.add(new Pair(x / _maxX * scale,
+                                 y / _maxY * scale));
+    }
+
+    System.out.println("Found " + G.getVertexCount() + " vertices, " + G.getEdgeCount() + " edges, and " + normPositions.size() + " positions");
+
+    return new Pair(G, normPositions);
   }
 
-  return G;
-}
+
+  public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V>
+      vClass, Graph<U> graph, ArrayList<Pair<Double, Double>> positions)  throws
+    InstantiationException, IllegalAccessException {
+
+    Graph<V> G = new Graph<V>();
+
+    for (int i = 0; i < graph.getVertexCount(); i++) {
+      G.addVertex(vClass.newInstance());
+    }
+
+    for (int i = 0; i < graph.getVertexCount(); i++) {
+      for (Pair<Integer, Double> e : graph.getAdjacency(i)) {
+        boolean existsInG = false;
+        for (Pair<Integer, ?> f : G.getAdjacency(e.getItem1())) {
+          existsInG = existsInG || f.getItem1().equals(i);
+        }
+        if (!existsInG) {
+          G.addEdge(i, e.getItem1(), e.getItem2());
+        }
+      }
 
 
- /**
+      // for (Pair<Integer, Double> edge : graph.getAdjacency(i)) {
+      //   boolean exists = false;
+      //   int j = edge.getItem1();
+      //   for (Pair<Integer, ?> edge2 : G.getAdjacency(j)) {
+      //     if (edge2.getItem1() == i) {
+      //       exists = true;
+      //     }
+      //   }
+      //   if (!exists) {
+      //     G.addEdge(i, j, edge.getItem2());
+      //   }
+      // }
+    }
+
+    if (EuclidianSPVertex.class.isAssignableFrom(vClass))  {
+      for (int i = 0; i < G.getVertexCount(); i++) {
+        Pair<Double, Double> position = positions.get(i);
+        ((EuclidianSPVertex)G.getVertex(i)).setPosition(position.getItem1(), position.getItem2());
+      }
+    }
+
+    return G;
+  }
+
+
+  /**
   * Generate a complete graph, with the given number of vertices.
   * @param n The number of vertices in the graph.
   * @return The graph.
   */
- public static <V extends SPVertex> Graph<V> complete(Class<V> vClass,
+  public static <V extends SPVertex> Graph<V> complete(Class<V> vClass,
      int n) throws InstantiationException, IllegalAccessException {
    Graph<V> G = new Graph();
    Random random = new Random();
@@ -105,7 +200,7 @@ public static <V extends SPVertex, U extends SPVertex> Graph<V> copy(Class<V>
    }
 
    return G;
- }
+  }
 
 
  /**

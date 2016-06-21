@@ -54,7 +54,8 @@ public class GraphDrawer {
     private double radius;
 
 
-    public SVGElement(String tag, Color stroke, double strokeOpacity, Color fill, double fillOpacity, double strokeWidth, double radius) {
+    public SVGElement(String tag, Color stroke, double strokeOpacity, Color fill,
+                      double fillOpacity, double strokeWidth, double radius) {
       this.tag = tag;
       this.fill = fill;
       this.stroke = stroke;
@@ -93,12 +94,48 @@ public class GraphDrawer {
   }
 
 
+  // public static <V extends Vertex> void graphSVG(double scale, String path, Graph<V> G,
+  //     List<Pair<Double, Double>> positions, SVGElement vertexElement,
+  //     List<Pair<SVGElement, List<V>>> vertexMarkLists,
+  //     List<Triple<SVGPath, Integer, List<V>>> vertexPathLists) {
+
+  //   ArrayList<Pair<SVGElement, ArrayList<Integer>>> indexMarks
+  //     = new ArrayList<Pair<SVGElement, ArrayList<Integer>>>();
+  //   for (Pair<SVGElement, List<V>> marks : vertexMarkLists) {
+  //     ArrayList<Integer> indices = new ArrayList<Integer>();
+  //     for (V mark : marks.getItem2()) {
+  //       indices.add(G.getVertices().indexOf(mark));
+  //     }
+  //     indexMarks.add(new Pair(marks.getItem1(), indices));
+  //   }
+
+  //   ArrayList<Triple<SVGPath, Integer, ArrayList<Integer>>> indexPaths
+  //     = new ArrayList<Pair<SVGPath, ArrayList<Integer>>>();
+  //   for (Pair<SVGPath, List<V>> paths : vertexPathLists) {
+  //     ArrayList<Integer> indices = new ArrayList<Integer>();
+  //     for (V target : paths.getItem2()) {
+  //       indices.add(G.getVertices().indexOf(target));
+  //     }
+  //     indexPaths.add(new Triple(paths.getItem1(), paths.getItem2(), indices));
+  //   }
+
+  //   graphSVG(scale, path, G, positions, indexMarks, indexPaths);
+  // }
+
+
   public static void graphSVG(double scale, String path, Graph<?> G,
       List<Pair<Double, Double>> positions, SVGElement vertexElement,
       List<Pair<SVGElement, List<Integer>>> vertexMarkLists,
       List<Triple<SVGPath, Integer, List<Integer>>> vertexPathLists) {
+    graphSVG(scale, 1000d, path, G, positions, vertexElement, vertexMarkLists, vertexPathLists);
+  }
 
-    double ratio = 1000d / scale;
+  public static void graphSVG(double scale, double size, String path, Graph<?> G,
+      List<Pair<Double, Double>> positions, SVGElement vertexElement,
+      List<Pair<SVGElement, List<Integer>>> vertexMarkLists,
+      List<Triple<SVGPath, Integer, List<Integer>>> vertexPathLists) {
+
+    double ratio = size / scale;
     HashSet<Integer> vertexEdgesDrawn = new HashSet<Integer>();
 
     try {
@@ -106,7 +143,7 @@ public class GraphDrawer {
       writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
       writer.println("<svg xmlns:svg=\"http://www.w3.org/2000/svg\"");
       writer.println("xmlns=\"http://www.w3.org/2000/svg\"");
-      writer.println("width=\"1000px\" height=\"1000px\" version=\"1.1\">");
+      writer.println("width=\"" + size + "\" height=\"" + size + "\" version=\"1.1\">");
 
       for (int i = 0; i < G.getVertexCount(); i++) {
         vertexEdgesDrawn.add(i);
@@ -120,8 +157,9 @@ public class GraphDrawer {
                   positions.get(i).getItem2() * ratio));
           }
         }
-        writer.println(vertexElement.getSVG(positions.get(i).getItem1() * ratio,
-                                            positions.get(i).getItem2() * ratio));
+        if (vertexElement != null)
+          writer.println(vertexElement.getSVG(positions.get(i).getItem1() * ratio,
+                                              positions.get(i).getItem2() * ratio));
       }
 
       for (Pair<SVGElement, List<Integer>> marks : vertexMarkLists) {
